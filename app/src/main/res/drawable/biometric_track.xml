@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/drawable/biometric_track.xml -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 1) subtle outer shadow (offset down-right) -->
+    <item android:top="2dp" android:left="0dp" android:right="0dp" android:bottom="0dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="20dp" />
+            <!-- darkened purple as shadow -->
+            <solid android:color="#C9B7FF"/>
+        </shape>
+    </item>
+
+    <!-- 2) main pill track -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="20dp" />
+
+            <gradient
+                android:startColor="#EDE6FF"
+            android:centerColor="#E2D6FF"
+            android:endColor="#D6C7FF"
+            android:angle="270"/>
+            <!-- thin border -->
+            <stroke android:width="1dp" android:color="#BDAEFF"/>
+        </shape>
+    </item>
+
+    <!-- 3) inner highlight strip (top inset) to give a glossy feel -->
+    <item android:top="2dp" android:left="2dp" android:right="2dp" android:bottom="18dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="16dp" />
+            <gradient
+                android:startColor="#50FFFFFF"
+            android:endColor="#00FFFFFF"
+            android:angle="270"/>
+        </shape>
+    </item>
+
+</layer-list>

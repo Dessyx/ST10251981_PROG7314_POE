@@ -15,6 +15,11 @@
     <color name ="save">#F8E1FD</color>
     <color name ="history">#A6C7EA</color>
     <color name ="dear_diary">#FFC2C6</color>
+    <color name="biometric_track_top">#EDE6FF</color>
+    <color name="biometric_track_bottom">#D6C7FF</color>
+    <color name="biometric_thumb_color">#FFFFFFFF</color>
+    <color name="biometric_track_shadow">#C9B7FF</color>
+    <color name="biometric_thumb_stroke">#DDDDDD</color>
 
 
 </resources>

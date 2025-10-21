@@ -73,7 +73,8 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
-    
+    implementation(libs.androidx.biometric.ktx)
+
     // Testing dependencies
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)
@@ -99,4 +100,10 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    //Biometrics auth
+    implementation ("androidx.biometric:biometric:1.2.0")
+    implementation (libs.androidx.biometric.ktx.v140alpha02)
+    implementation ("androidx.security:security-crypto:1.1.0")
+    implementation ("com.google.code.gson:gson:2.10.1")
 }

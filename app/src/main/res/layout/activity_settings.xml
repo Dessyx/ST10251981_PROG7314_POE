@@ -101,13 +101,23 @@
                 android:textColor="@android:color/black"
                 android:layout_marginTop="12dp" />
 
-            <ImageView
-                android:id="@+id/Biometrics"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/bio_switch"
-                android:contentDescription="Biometrics Icon"
-                android:layout_marginTop="8dp" />
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switchBiometrics"
+                android:layout_width="120dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="8dp"
+                android:layout_gravity="start"
+                android:showText="true"
+                android:textOn="On"
+                android:textOff="Off"
+                android:switchMinWidth="120dp"
+                android:switchPadding="8dp"
+                android:splitTrack="false"
+                android:gravity="center_vertical"
+                android:textAppearance="@style/Widget.BiometricSwitch.Text"
+                android:thumb="@drawable/biometric_thumb"
+                android:track="@drawable/biometric_track"
+                app:useMaterialThemeColors="false" />
 
             <!-- Reminder Frequency -->
             <TextView

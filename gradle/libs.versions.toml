@@ -1,5 +1,6 @@
 [versions]
 agp = "8.9.1"
+biometricKtxVersion = "1.4.0-alpha02"
 kotlin = "2.0.21"
 coreKtx = "1.17.0"
 junit = "4.13.2"
@@ -13,8 +14,10 @@ mockito = "5.8.0"
 mockitoKotlin = "5.3.1"
 robolectric = "4.12"
 coroutines = "1.7.3"
+biometricKtx = "1.1.0"
 
 [libraries]
+androidx-biometric-ktx-v140alpha02 = { module = "androidx.biometric:biometric-ktx", version.ref = "biometricKtxVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -27,6 +30,7 @@ mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mo
 mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockitoKotlin" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+androidx-biometric-ktx = { group = "androidx.biometric", name = "biometric-ktx", version.ref = "biometricKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

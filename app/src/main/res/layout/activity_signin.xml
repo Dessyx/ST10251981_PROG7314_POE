@@ -161,18 +161,20 @@
                 app:iconTint="@null"
                 app:strokeWidth="0dp" />
 
-            <!-- Facebook Button -->
+
+            <!-- Biometric Button -->
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/facebook_signin_button"
+                android:id="@+id/biometric_signin_button"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:backgroundTint="@android:color/transparent"
-                app:icon="@drawable/facebook_icon"
                 app:iconGravity="start"
                 app:iconPadding="8dp"
                 app:iconTint="@null"
-                app:strokeWidth="0dp" />
+                app:strokeWidth="0dp"
+                android:text="Use biometrics"
+                android:textAllCaps="false" />
 
         </LinearLayout>
 
