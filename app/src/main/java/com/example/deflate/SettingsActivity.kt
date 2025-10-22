@@ -34,7 +34,7 @@ class SettingsActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var tvUserName: TextView
-    private var switchBiometrics: SwitchMaterial? = null
+
 
     //-------------------------------------------------------------------------
     // Lifecycle
@@ -53,11 +53,7 @@ class SettingsActivity : AppCompatActivity() {
         val btnSave: Button = findViewById(R.id.btnSave)
         val btnDeleteAccount: Button = findViewById(R.id.btnDeleteAccount)
 
-        switchBiometrics = try {
-            findViewById<SwitchMaterial>(R.id.switchBiometrics)
-        } catch (e: Exception) {
-            null
-        }
+
 
 
         // Show logged-in user name or email
@@ -65,8 +61,13 @@ class SettingsActivity : AppCompatActivity() {
 
         val currentName = user?.displayName ?: user?.email?.substringBefore("@") ?: "User"
 
-        val prefs = getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
-        switchBiometrics?.isChecked = prefs.getBoolean(KEY_BIOMETRICS_ENABLED, false)
+        val biometricToggle = findViewById<BiometricToggleView>(R.id.biometricToggle)
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val enabled = prefs.getBoolean("biometrics_enabled", false)
+
+        biometricToggle.setChecked(enabled, animate = false)
+
+
 
         tvUserName.text = currentName
         etName.setText(currentName)
@@ -166,40 +167,31 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
 
-        switchBiometrics?.setOnCheckedChangeListener { _, checked ->
+        biometricToggle.setOnCheckedChangeListener { checked ->
             if (checked) {
-                // Verify device supports biometrics
-                val bm = BiometricManager.from(this)
-                val canAuth = bm.canAuthenticate(
-                    BiometricManager.Authenticators.BIOMETRIC_STRONG or
-                            BiometricManager.Authenticators.BIOMETRIC_WEAK
-                )
-                if (canAuth != BiometricManager.BIOMETRIC_SUCCESS) {
+                // optional: verify device supports biometrics first
+                val bm = androidx.biometric.BiometricManager.from(this)
+                val can = bm.canAuthenticate(androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG or androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK)
+                if (can != androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS) {
+                    // show error and revert
                     Toast.makeText(this, "Biometrics not available on this device", Toast.LENGTH_SHORT).show()
-                    // revert UI
-                    switchBiometrics?.isChecked = false
+                    biometricToggle.setChecked(false, animate = true)
                     return@setOnCheckedChangeListener
                 }
 
-                // User enabled biometric in Settings.
-                // Save consent and set needs_restart flag (biometric won't be active until app restart).
                 prefs.edit()
-                    .putBoolean(KEY_BIOMETRICS_ENABLED, true)
-                    .putBoolean(KEY_BIOMETRICS_ACTIVE, false)
-                    .putBoolean(KEY_BIOMETRICS_NEEDS_RESTART, true)
+                    .putBoolean("biometrics_enabled", true)
+                    .putBoolean("biometrics_active", false)
+                    .putBoolean("biometrics_needs_restart", true)
                     .apply()
-
-                // Inform user they need to close & re-open the app
-                Toast.makeText(this, "Biometric enabled. Close and re-open the app for the feature to activate.", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Biometric enabled. Close and re-open the app for activation.", Toast.LENGTH_LONG).show()
             } else {
-                // Disabled => clear flags
                 prefs.edit()
-                    .putBoolean(KEY_BIOMETRICS_ENABLED, false)
-                    .putBoolean(KEY_BIOMETRICS_ACTIVE, false)
-                    .putBoolean(KEY_BIOMETRICS_NEEDS_RESTART, false)
+                    .putBoolean("biometrics_enabled", false)
+                    .putBoolean("biometrics_active", false)
+                    .putBoolean("biometrics_needs_restart", false)
                     .apply()
-
-                Toast.makeText(this, "Biometric sign-in disabled.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Biometric disabled.", Toast.LENGTH_SHORT).show()
             }
         }
 

@@ -101,23 +101,14 @@
                 android:textColor="@android:color/black"
                 android:layout_marginTop="12dp" />
 
-            <com.google.android.material.switchmaterial.SwitchMaterial
-                android:id="@+id/switchBiometrics"
-                android:layout_width="120dp"
-                android:layout_height="40dp"
+            <!-- in activity_settings.xml, where the biometrics switch belongs -->
+            <com.example.deflate.BiometricToggleView
+                android:id="@+id/biometricToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:layout_gravity="start"
-                android:showText="true"
-                android:textOn="On"
-                android:textOff="Off"
-                android:switchMinWidth="120dp"
-                android:switchPadding="8dp"
-                android:splitTrack="false"
-                android:gravity="center_vertical"
-                android:textAppearance="@style/Widget.BiometricSwitch.Text"
-                android:thumb="@drawable/biometric_thumb"
-                android:track="@drawable/biometric_track"
-                app:useMaterialThemeColors="false" />
+                android:layout_gravity="start"/>
+
 
             <!-- Reminder Frequency -->
             <TextView
