@@ -32,8 +32,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import androidx.core.view.isVisible
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
-import com.example.deflate.security.CryptographyManager
-import com.example.deflate.security.CiphertextWrapper
+
 
 
 
@@ -48,16 +47,12 @@ class SignInActivity : AppCompatActivity() {
         private const val RC_GITHUB_AUTH = 9002
         private const val GITHUB_CLIENT_ID = "Ov23liwG3uaDjiDZJnR4"
         private const val GITHUB_REDIRECT_URI = "http://localhost:8080/github-callback"
-        private const val CIPHERTEXT_PREFS_FILE = "biometric_creds_prefs"
-        private const val CIPHERTEXT_PREF_KEY = "creds_ciphertext_key"
-        private const val PREFS_MODE = Context.MODE_PRIVATE
+        private const val PREFS_FILE = "app_prefs"
+        private const val KEY_BIOMETRICS_ENABLED = "biometrics_enabled"
+        private const val KEY_BIOMETRICS_ACTIVE = "biometrics_active"
+        private const val KEY_BIOMETRICS_NEEDS_RESTART = "biometrics_needs_restart"
 
-        // Keystore key alias used by CryptographyManager
-        private const val KEYSTORE_KEY_ALIAS = "biometric_aes_key_v1"
 
-        // App-level flag key to know if credentials were saved
-        private const val CREDS_SAVED_FLAG = "creds_saved_flag"
-        private const val BIOMETRICS_ENABLED_FLAG = "biometrics_enabled_flag"
 
     }
 
@@ -78,7 +73,7 @@ class SignInActivity : AppCompatActivity() {
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var callbackManager: CallbackManager
 
-    private val cryptoManager: CryptographyManager = CryptographyManager()
+
 
     //-------------------------------------------------------------------------
     //  Lifecycle
@@ -103,15 +98,18 @@ class SignInActivity : AppCompatActivity() {
         initViews()
         setupClickListeners()
 
-        biometricSignInButton.isVisible = androidx.biometric.BiometricManager.from(this).canAuthenticate(
-            androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG or
-                    androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
-        ) == androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS
+        biometricSignInButton.isVisible = Biometrics.isAvailable(this)
 
-        val prefs = getSharedPreferences(CIPHERTEXT_PREFS_FILE, PREFS_MODE)
-        if (!prefs.getBoolean("biometric_first_hint_shown", false) && biometricSignInButton.isVisible) {
-            Toast.makeText(this, "Tip: enable biometric sign-in in Settings to use fingerprint sign-in.", Toast.LENGTH_LONG).show()
-            prefs.edit().putBoolean("biometric_first_hint_shown", true).apply()
+        // Activation after restart:
+        // If the user previously enabled biometrics and the "needs_restart" flag is set,
+        // we only mark the biometrics as active now (this code runs at app start).
+        // This enforces the "close and reopen app for biometrics to work" rule.
+        val prefs = getSharedPreferences(PREFS_FILE, MODE_PRIVATE)
+        val needsRestart = prefs.getBoolean(KEY_BIOMETRICS_NEEDS_RESTART, false)
+        if (needsRestart) {
+            // App has been restarted (we're now running): activate biometrics and clear the flag.
+            prefs.edit().putBoolean(KEY_BIOMETRICS_ACTIVE, true).putBoolean(KEY_BIOMETRICS_NEEDS_RESTART, false).apply()
+            Log.d(TAG, "Biometrics activation: app restart detected - biometrics now active")
         }
     }
 
@@ -171,228 +169,25 @@ class SignInActivity : AppCompatActivity() {
                 }
                 .addOnFailureListener { e ->
                     showError("Error: ${e.message}")
-                }
+
+                 }
         }
     }
 
     private fun signInWithEmail(email: String, password: String) {
-        signinButton.isEnabled = false
-        signinButton.text = "Signing in..."
-
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 signinButton.isEnabled = true
                 signinButton.text = "Sign In"
 
                 if (task.isSuccessful) {
-                    // Normal sign-in succeeded.
-                    // If the user has enabled biometrics (consent) but we haven't saved creds yet,
-                    // ask whether to save encrypted credentials for biometric sign-in.
-                    val prefs = getSharedPreferences(CIPHERTEXT_PREFS_FILE, PREFS_MODE)
-                    val biometricsEnabled = prefs.getBoolean(BIOMETRICS_ENABLED_FLAG, false)
-                    val credsSaved = prefs.getBoolean(CREDS_SAVED_FLAG, false)
-
-                    if (biometricsEnabled && !credsSaved) {
-                        // Ask for permission to save credentials securely
-                        AlertDialog.Builder(this)
-                            .setTitle("Save login for biometric sign-in?")
-                            .setMessage("Would you like to save your login securely so you can sign in with your fingerprint/face next time?")
-                            .setPositiveButton("Yes") { _, _ ->
-                                try {
-                                    saveCredentialsForBiometric(email, password)
-                                    prefs.edit().putBoolean(CREDS_SAVED_FLAG, true).apply()
-                                    Toast.makeText(this, "Credentials saved for biometric sign-in", Toast.LENGTH_SHORT).show()
-                                } catch (e: Exception) {
-                                    Log.e(TAG, "saveCredentialsForBiometric failed: ${e.message}", e)
-                                    Toast.makeText(this, "Failed to save credentials: ${e.message}", Toast.LENGTH_LONG).show()
-                                } finally {
-                                    handleSignInSuccess()
-                                }
-                            }
-                            .setNegativeButton("No") { _, _ ->
-                                // proceed without saving
-                                handleSignInSuccess()
-                            }
-                            .setCancelable(false)
-                            .show()
-                    } else {
-                        handleSignInSuccess()
-                    }
+                    handleSignInSuccess()
                 } else {
-                    val error = (task.exception as? FirebaseAuthException)?.errorCode ?: task.exception?.localizedMessage ?: "UNKNOWN"
+                    val error = (task.exception as? FirebaseAuthException)?.errorCode ?: "UNKNOWN"
                     showError("Login failed: $error")
                 }
             }
     }
-
-    private fun onBiometricButtonClicked() {
-        // Check whether device supports biometrics
-        val bm = androidx.biometric.BiometricManager.from(this)
-        val canAuth = bm.canAuthenticate(
-            androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG or
-                    androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
-        )
-        if (canAuth != androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS) {
-            Toast.makeText(this, "Biometrics not available on this device", Toast.LENGTH_LONG).show()
-            return
-        }
-
-        val prefs = getSharedPreferences(CIPHERTEXT_PREFS_FILE, PREFS_MODE)
-        val biometricsEnabled = prefs.getBoolean(BIOMETRICS_ENABLED_FLAG, false)
-        val credsSaved = prefs.getBoolean(CREDS_SAVED_FLAG, false)
-
-        when {
-            !biometricsEnabled -> {
-                // Not enabled in Settings — open Settings to let the user enable
-                AlertDialog.Builder(this)
-                    .setTitle("Enable biometrics in Settings")
-                    .setMessage("To use biometric sign in, first enable the feature in Settings. Open Settings now?")
-                    .setPositiveButton("Open Settings") { _, _ ->
-                        startActivity(Intent(this, SettingsActivity::class.java))
-                    }
-                    .setNegativeButton("Cancel", null)
-                    .show()
-            }
-
-            biometricsEnabled && !credsSaved -> {
-                // Enabled but no saved credentials yet — instruct to sign in normally once
-                AlertDialog.Builder(this)
-                    .setTitle("First sign-in required")
-                    .setMessage("You enabled biometric sign-in, but we need you to sign in normally once so credentials can be stored securely. After you sign in and permit saving credentials, biometric sign-in will work.")
-                    .setPositiveButton("Okay", null)
-                    .show()
-            }
-
-            biometricsEnabled && credsSaved -> {
-
-                startBiometricSignIn()
-            }
-        }
-    }
-    private fun startBiometricSignIn() {
-
-        val wrapper: CiphertextWrapper? = cryptoManager.getCiphertextWrapperFromSharedPrefs(
-            context = this,
-            filename = CIPHERTEXT_PREFS_FILE,
-            mode = PREFS_MODE,
-            prefKey = CIPHERTEXT_PREF_KEY
-        )
-
-        if (wrapper == null) {
-            Toast.makeText(this, "No saved credentials. Please sign in normally once.", Toast.LENGTH_LONG).show()
-            return
-        }
-
-        // Initialize cipher for decryption with IV (this will prepare a Cipher bound to the Keystore key)
-        val cipher = try {
-            cryptoManager.getInitializedCipherForDecryption(KEYSTORE_KEY_ALIAS, wrapper.initializationVector)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to get cipher for decryption: ${e.message}", e)
-            Toast.makeText(this, "Unable to initialize crypto for biometric sign-in.", Toast.LENGTH_LONG).show()
-            return
-        }
-
-        // Build BiometricPrompt with CryptoObject(cipher)
-        val executor = ContextCompat.getMainExecutor(this)
-        val biometricPrompt = BiometricPrompt(this, executor, object : BiometricPrompt.AuthenticationCallback() {
-            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                super.onAuthenticationSucceeded(result)
-                // The cipher inside result is unlocked and can be used for decrypt
-                val authCipher = result.cryptoObject?.cipher
-                if (authCipher == null) {
-                    runOnUiThread {
-                        Toast.makeText(this@SignInActivity, "Biometric succeeded but crypto is unavailable", Toast.LENGTH_LONG).show()
-                    }
-                    return
-                }
-
-                try {
-                    val plaintext = cryptoManager.decryptData(wrapper.cipherText, authCipher)
-                    val parts = plaintext.split(":", limit = 2)
-                    if (parts.size == 2) {
-                        val email = parts[0]
-                        val password = parts[1]
-                        // Reuse the same sign-in flow
-                        runOnUiThread {
-                            signInWithEmail(email, password)
-                        }
-                    } else {
-                        runOnUiThread {
-                            Toast.makeText(this@SignInActivity, "Decrypted data invalid", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Decryption failed after biometric: ${e.message}", e)
-                    runOnUiThread {
-                        Toast.makeText(this@SignInActivity, "Failed to decrypt credentials: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
-                    }
-                }
-            }
-
-            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                super.onAuthenticationError(errorCode, errString)
-                runOnUiThread { Toast.makeText(this@SignInActivity, "Authentication error: $errString", Toast.LENGTH_SHORT).show() }
-            }
-
-            override fun onAuthenticationFailed() {
-                super.onAuthenticationFailed()
-                runOnUiThread { Toast.makeText(this@SignInActivity, "Authentication failed", Toast.LENGTH_SHORT).show() }
-            }
-        })
-
-        val promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle("Unlock with biometrics")
-            .setSubtitle("Use your fingerprint or face to sign in")
-            .setNegativeButtonText("Cancel")
-            .setAllowedAuthenticators(
-                androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG or
-                        androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
-            )
-            .build()
-
-        biometricPrompt.authenticate(promptInfo, BiometricPrompt.CryptoObject(cipher))
-    }
-
-    private fun saveCredentialsForBiometric(email: String, password: String) {
-        // Prepare plaintext
-        val plaintext = "$email:$password"
-
-        // Get cipher initialized for encryption — this creates an IV
-        val cipher = cryptoManager.getInitializedCipherForEncryption(KEYSTORE_KEY_ALIAS)
-
-        // Encrypt plaintext -> CiphertextWrapper(ciphertext, iv)
-        val wrapper = cryptoManager.encryptData(plaintext, cipher)
-
-        // Persist wrapper using CryptographyManager helper (Gson JSON)
-        cryptoManager.persistCiphertextWrapperToSharedPrefs(
-            ciphertextWrapper = wrapper,
-            context = this,
-            filename = CIPHERTEXT_PREFS_FILE,
-            mode = PREFS_MODE,
-            prefKey = CIPHERTEXT_PREF_KEY
-        )
-
-        // Mark creds saved flag (so biometric button will use saved creds)
-        val prefs = getSharedPreferences(CIPHERTEXT_PREFS_FILE, PREFS_MODE)
-        prefs.edit().putBoolean(CREDS_SAVED_FLAG, true).apply()
-    }
-    private fun clearSavedCredentialsAndKey() {
-        // Remove stored wrapper
-        val prefs = getSharedPreferences(CIPHERTEXT_PREFS_FILE, PREFS_MODE)
-        prefs.edit().remove(CIPHERTEXT_PREF_KEY).putBoolean(CREDS_SAVED_FLAG, false).apply()
-
-        // Optionally delete the KeyStore key (so previous ciphertext cannot be decrypted)
-        try {
-            val keyStore = java.security.KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
-            if (keyStore.containsAlias(KEYSTORE_KEY_ALIAS)) {
-                keyStore.deleteEntry(KEYSTORE_KEY_ALIAS)
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to delete keystore key: ${e.message}", e)
-        }
-    }
-
-
 
     private fun showError(msg: String) {
         signinButton.isEnabled = true
@@ -602,9 +397,88 @@ class SignInActivity : AppCompatActivity() {
             }
             .addOnFailureListener { exception ->
                 Log.e(TAG, "Failed to save GitHub user data to Firestore", exception)
-                // Continue anyway - user is authenticated even if data save fails
+
             }
 
+    }
+    //-------------------------------------------------------------------------
+    // Biometric Authentication
+    private fun onBiometricButtonClicked() {
+        val prefs = getSharedPreferences(PREFS_FILE, MODE_PRIVATE)
+        val enabled = prefs.getBoolean(KEY_BIOMETRICS_ENABLED, false)
+        val active = prefs.getBoolean(KEY_BIOMETRICS_ACTIVE, false)
+
+        when {
+            !enabled -> {
+
+                AlertDialog.Builder(this)
+                    .setTitle("Enable biometrics in Settings")
+                    .setMessage("To use biometric sign in, first sign in with your account, then open Settings and enable Biometrics (toggle). After enabling, close and re-open the app for the feature to activate.")
+                    .setPositiveButton("OK", null)
+                    .show()
+                return
+            }
+
+            enabled && !active -> {
+                // Biometrics enabled in Settings but app hasn't been restarted yet
+                AlertDialog.Builder(this)
+                    .setTitle("Restart required")
+                    .setMessage("Biometric sign-in will be available after you close and re-open the app. Please close and re-open the app, then try again.")
+                    .setPositiveButton("OK", null)
+                    .show()
+                return
+            }
+
+            enabled && active -> {
+
+                authenticateAndProceed()
+            }
+        }
+    }
+
+    private fun authenticateAndProceed() {
+        val executor = ContextCompat.getMainExecutor(this)
+        val prompt = BiometricPrompt(this, executor, object : BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                super.onAuthenticationSucceeded(result)
+                runOnUiThread {
+                    handleBiometricSuccess()
+                }
+            }
+
+            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                super.onAuthenticationError(errorCode, errString)
+                runOnUiThread {
+                    Toast.makeText(this@SignInActivity, "Authentication error: $errString", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onAuthenticationFailed() {
+                super.onAuthenticationFailed()
+                runOnUiThread {
+                    Toast.makeText(this@SignInActivity, "Authentication failed", Toast.LENGTH_SHORT).show()
+                }
+            }
+        })
+
+        val info = BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Unlock with biometrics")
+            .setSubtitle("Use your fingerprint or face to access the app")
+            .setNegativeButtonText("Cancel")
+            .setAllowedAuthenticators(
+                androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                        androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
+            )
+            .build()
+
+        // Launch prompt
+        prompt.authenticate(info)
+    }
+    private fun handleBiometricSuccess() {
+        Toast.makeText(this, "Biometric authentication successful ", Toast.LENGTH_SHORT).show()
+
+
+        handleSignInSuccess()
     }
 
 }

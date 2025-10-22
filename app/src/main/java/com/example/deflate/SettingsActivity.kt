@@ -18,7 +18,6 @@ import com.google.android.material.switchmaterial.SwitchMaterial
 import androidx.biometric.BiometricManager
 import android.content.Context
 import android.util.Log
-import com.example.deflate.security.BiometricCredentialStore
 
 
 //-------------------------------------------------------------------------
@@ -27,16 +26,10 @@ class SettingsActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "SettingsActivity"
-
-        // must match SignInActivity constants
-        private const val CIPHERTEXT_PREFS_FILE = "biometric_creds_prefs"
-        private const val PREFS_MODE = Context.MODE_PRIVATE
-        private const val BIOMETRICS_ENABLED_FLAG = "biometrics_enabled_flag"
-        private const val CREDS_SAVED_FLAG = "creds_saved_flag"
-
-        // Keystore key alias used by SignInActivity / CryptographyManager
-        // If you change the alias elsewhere, update this constant accordingly.
-        private const val KEYSTORE_KEY_ALIAS = "biometric_aes_key_v1"
+        private const val PREFS_FILE = "app_prefs"
+        private const val KEY_BIOMETRICS_ENABLED = "biometrics_enabled"
+        private const val KEY_BIOMETRICS_ACTIVE = "biometrics_active"
+        private const val KEY_BIOMETRICS_NEEDS_RESTART = "biometrics_needs_restart"
     }
 
     private lateinit var auth: FirebaseAuth
@@ -71,6 +64,9 @@ class SettingsActivity : AppCompatActivity() {
         val user = auth.currentUser
 
         val currentName = user?.displayName ?: user?.email?.substringBefore("@") ?: "User"
+
+        val prefs = getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
+        switchBiometrics?.isChecked = prefs.getBoolean(KEY_BIOMETRICS_ENABLED, false)
 
         tvUserName.text = currentName
         etName.setText(currentName)
@@ -169,59 +165,41 @@ class SettingsActivity : AppCompatActivity() {
                 }
             }
         }
-        switchBiometrics?.let { sw ->
-            // Reflect stored preference
-            sw.isChecked = getPrefs().getBoolean(BIOMETRICS_ENABLED_FLAG, false)
 
-            sw.setOnCheckedChangeListener { _, checked ->
-                if (checked) {
-                    // Enabling biometrics: verify device supports biometrics
-                    val bm = BiometricManager.from(this)
-                    val canAuth = bm.canAuthenticate(
-                        BiometricManager.Authenticators.BIOMETRIC_STRONG
-                                or BiometricManager.Authenticators.BIOMETRIC_WEAK
-                    )
-                    if (canAuth != BiometricManager.BIOMETRIC_SUCCESS) {
-                        Toast.makeText(
-                            this,
-                            "Biometrics not available on this device",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        // revert switch visually
-                        sw.isChecked = false
-                        return@setOnCheckedChangeListener
-                    }
-
-                    // Persist user's consent; actual credentials are only saved after a normal login
-                    getPrefs().edit().putBoolean(BIOMETRICS_ENABLED_FLAG, true).apply()
-                    Toast.makeText(
-                        this,
-                        "Biometric sign-in enabled. Sign in once normally to store credentials.",
-                        Toast.LENGTH_LONG
-                    ).show()
-                } else {
-                    // Disabling biometric sign-in: clear stored creds and optionally the keystore key
-                    getPrefs().edit().putBoolean(BIOMETRICS_ENABLED_FLAG, false).apply()
-
-                    try {
-                        BiometricCredentialStore.clearSavedCredentialsAndKey(
-                            this,
-                            KEYSTORE_KEY_ALIAS
-                        )
-                        Toast.makeText(
-                            this,
-                            "Biometric sign-in disabled and saved credentials cleared",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error while clearing biometric creds/key: ${e.message}", e)
-                        Toast.makeText(
-                            this,
-                            "Biometric disabled, but failed to clear all stored data.",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
+        switchBiometrics?.setOnCheckedChangeListener { _, checked ->
+            if (checked) {
+                // Verify device supports biometrics
+                val bm = BiometricManager.from(this)
+                val canAuth = bm.canAuthenticate(
+                    BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                            BiometricManager.Authenticators.BIOMETRIC_WEAK
+                )
+                if (canAuth != BiometricManager.BIOMETRIC_SUCCESS) {
+                    Toast.makeText(this, "Biometrics not available on this device", Toast.LENGTH_SHORT).show()
+                    // revert UI
+                    switchBiometrics?.isChecked = false
+                    return@setOnCheckedChangeListener
                 }
+
+                // User enabled biometric in Settings.
+                // Save consent and set needs_restart flag (biometric won't be active until app restart).
+                prefs.edit()
+                    .putBoolean(KEY_BIOMETRICS_ENABLED, true)
+                    .putBoolean(KEY_BIOMETRICS_ACTIVE, false)
+                    .putBoolean(KEY_BIOMETRICS_NEEDS_RESTART, true)
+                    .apply()
+
+                // Inform user they need to close & re-open the app
+                Toast.makeText(this, "Biometric enabled. Close and re-open the app for the feature to activate.", Toast.LENGTH_LONG).show()
+            } else {
+                // Disabled => clear flags
+                prefs.edit()
+                    .putBoolean(KEY_BIOMETRICS_ENABLED, false)
+                    .putBoolean(KEY_BIOMETRICS_ACTIVE, false)
+                    .putBoolean(KEY_BIOMETRICS_NEEDS_RESTART, false)
+                    .apply()
+
+                Toast.makeText(this, "Biometric sign-in disabled.", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -257,7 +235,7 @@ class SettingsActivity : AppCompatActivity() {
                 }
             }
         }
-      private fun getPrefs() = getSharedPreferences(CIPHERTEXT_PREFS_FILE, PREFS_MODE)
+
     }
 
 
