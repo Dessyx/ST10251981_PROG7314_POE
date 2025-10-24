@@ -106,4 +106,5 @@ dependencies {
     implementation (libs.androidx.biometric.ktx.v140alpha02)
     implementation ("androidx.security:security-crypto:1.1.0")
     implementation ("com.google.code.gson:gson:2.10.1")
+    
 }

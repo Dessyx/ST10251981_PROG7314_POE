@@ -10,6 +10,7 @@ import com.google.firebase.auth.FirebaseAuth
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import android.widget.ProgressBar
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
 import android.content.Context
@@ -18,9 +19,12 @@ import androidx.core.content.ContextCompat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.Calendar
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import com.google.firebase.firestore.FirebaseFirestore
+import android.util.Log
 
 //-------------------------------------------------------------------------
 // Home screen activity
@@ -28,6 +32,7 @@ class HomeActivity : AppCompatActivity() {
     //-------------------------------------------------------------------------
     // State and dependencies
     private lateinit var auth: FirebaseAuth
+    private lateinit var db: FirebaseFirestore
     private lateinit var prefs: android.content.SharedPreferences
     private var todayMood: String? = null
     private var currentTagIndex = 0
@@ -129,6 +134,7 @@ class HomeActivity : AppCompatActivity() {
    
         prefs = getSharedPreferences("home_prefs", Context.MODE_PRIVATE)
         auth = FirebaseAuth.getInstance()
+        db = FirebaseFirestore.getInstance()
 
         // Get the logged in Firebase user
         val currentUser = auth.currentUser
@@ -176,6 +182,8 @@ class HomeActivity : AppCompatActivity() {
             startActivity(Intent(this, ActivitiesActivity::class.java))
         }
 
+        loadStreakData()
+
         // Bottom navigation
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)
         bottomNav.setOnItemSelectedListener { item ->
@@ -193,12 +201,14 @@ class HomeActivity : AppCompatActivity() {
     //-------------------------------------------------------------------------
     // Handle mood selection and fetch quotes
     private fun setMood(mood: String) {
+        Log.d("HomeActivity", "🎭 User selected mood: $mood")
         todayMood = mood
-
 
         applyTodayMood(mood, save = true)
 
-        Toast.makeText(this, "Fetching quotes for $mood...", Toast.LENGTH_SHORT).show()
+        saveMoodEntryToFirestore(mood)
+
+        Toast.makeText(this, "Mood: $mood selected!", Toast.LENGTH_SHORT).show()
 
         currentMoodTags = moodToTagMap[mood] ?: listOf(mood.lowercase())
         currentTagIndex = 0
@@ -252,6 +262,172 @@ class HomeActivity : AppCompatActivity() {
                     "No quotes found. Please try another mood!"
             }
         }
+    }
+
+    //-------------------------------------------------------------------------
+    // Load and calculate streak data - Days logged THIS WEEK
+    private fun loadStreakData() {
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            Log.e("HomeActivity", "No user logged in for streak calculation")
+            return
+        }
+
+        Log.d("HomeActivity", "🔥 Loading streak data for user: ${currentUser.uid}")
+        
+        // Count days logged THIS WEEK (not consecutive, just total)
+        val calendar = Calendar.getInstance()
+        
+        // Get start of this week (Monday)
+        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val weekStart = calendar.timeInMillis
+        
+        // Get end of this week (Sunday)
+        calendar.add(Calendar.DAY_OF_WEEK, 6)
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
+        val weekEnd = calendar.timeInMillis
+        
+        Log.d("HomeActivity", "📅 Week range: ${SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(weekStart))} to ${SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(weekEnd))}")
+        
+        val datesThisWeek = mutableSetOf<String>()
+        var maxStreak = 7
+        var completedQueries = 0
+        val totalQueries = 2
+
+        fun checkAndUpdateStreak() {
+            completedQueries++
+            if (completedQueries >= totalQueries) {
+                val daysLoggedThisWeek = datesThisWeek.size
+                Log.d("HomeActivity", "📅 Total unique days logged this week: $daysLoggedThisWeek")
+                Log.d("HomeActivity", "📅 Days: ${datesThisWeek.sorted()}")
+                
+                // Update UI
+                updateStreakUI(daysLoggedThisWeek, maxStreak)
+            }
+        }
+
+        // Check diary entries (server-side filtering with indexes)
+        db.collection("diaryEntries")
+            .whereEqualTo("userId", currentUser.uid)
+            .whereGreaterThanOrEqualTo("timestamp", weekStart)
+            .whereLessThanOrEqualTo("timestamp", weekEnd)
+            .get()
+            .addOnSuccessListener { diaryDocs ->
+                Log.d("HomeActivity", "📝 Found ${diaryDocs.size()} diary entries this week")
+                
+                for (document in diaryDocs) {
+                    val timestamp = document.getLong("timestamp") ?: 0L
+                    val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(timestamp))
+                    datesThisWeek.add(date)
+                    Log.d("HomeActivity", "📝 Diary entry on: $date")
+                }
+                Log.d("HomeActivity", "📝 Diary days this week: ${datesThisWeek.size}")
+                checkAndUpdateStreak()
+            }
+            .addOnFailureListener { e ->
+                Log.e("HomeActivity", "Error loading diary entries for streak", e)
+                checkAndUpdateStreak()
+            }
+
+        // Also check mood entries this week
+        db.collection("moodEntries")
+            .whereEqualTo("userId", currentUser.uid)
+            .whereGreaterThanOrEqualTo("timestamp", weekStart)
+            .whereLessThanOrEqualTo("timestamp", weekEnd)
+            .get()
+            .addOnSuccessListener { moodDocs ->
+                Log.d("HomeActivity", "🎭 Found ${moodDocs.size()} mood entries this week")
+                
+                for (document in moodDocs) {
+                    val timestamp = document.getLong("timestamp") ?: 0L
+                    val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(timestamp))
+                    datesThisWeek.add(date)
+                    Log.d("HomeActivity", "🎭 Mood entry on: $date")
+                }
+                Log.d("HomeActivity", "🎭 Mood days this week: ${datesThisWeek.size}")
+                checkAndUpdateStreak()
+            }
+            .addOnFailureListener { e ->
+                Log.e("HomeActivity", "Error loading mood entries for streak", e)
+                checkAndUpdateStreak()
+            }
+    }
+
+    private fun updateStreakUI(currentStreak: Int, maxStreak: Int) {
+        val tvStreak = findViewById<TextView>(R.id.tvStreak)
+        val progressStreak = findViewById<ProgressBar>(R.id.progressStreak)
+        val tvStreakMessage = findViewById<TextView>(R.id.tvStreakMessage)
+
+        Log.d("HomeActivity", "🔥 Updating streak UI: $currentStreak/$maxStreak days")
+        
+        // Update streak text - showing days logged this week
+        tvStreak?.text = "🔥 $currentStreak/$maxStreak days this week"
+        
+        // Update progress bar
+        progressStreak?.max = maxStreak
+        progressStreak?.progress = currentStreak
+        
+        // Update message with more specific guidance
+        val daysLeft = maxStreak - currentStreak
+        when {
+            currentStreak == 0 -> {
+                tvStreakMessage?.text = "Start your week by logging your mood or writing in your diary!"
+            }
+            daysLeft > 0 -> {
+                tvStreakMessage?.text = "Log $daysLeft more days to complete this week! (Mood selection or diary entry)"
+            }
+            else -> {
+                tvStreakMessage?.text = "Amazing! You've logged all 7 days this week! 🎉"
+            }
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    // Save mood entry to Firestore for insights tracking
+    private fun saveMoodEntryToFirestore(mood: String) {
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            Log.e("HomeActivity", "Cannot save mood: No user logged in")
+            return
+        }
+
+        val now = Date()
+        val dateKey = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(now)
+        val username = currentUser.email?.substringBefore("@") ?: "User"
+        
+        Log.d("HomeActivity", "Saving mood: $mood for user: ${currentUser.uid} on date: $dateKey")
+
+        // ALWAYS create a new entry - every mood selection counts!
+        val moodEntry = hashMapOf(
+            "userId" to currentUser.uid,
+            "username" to username,
+            "mood" to mood,
+            "dateKey" to dateKey,
+            "timestamp" to System.currentTimeMillis(),
+            "source" to "home_screen"
+        )
+
+        db.collection("moodEntries")
+            .add(moodEntry)
+            .addOnSuccessListener { documentReference ->
+                Log.d("HomeActivity", "✅ NEW mood entry saved with ID: ${documentReference.id}")
+                Log.d("HomeActivity", "📝 Saved data: $moodEntry")
+                Toast.makeText(this@HomeActivity, "Mood saved! (#${documentReference.id.takeLast(4)})", Toast.LENGTH_SHORT).show()
+                
+                // Refresh streak data to update the streak bar
+                loadStreakData()
+            }
+            .addOnFailureListener { e ->
+                Log.e("HomeActivity", "❌ Error saving mood entry", e)
+                Toast.makeText(this@HomeActivity, "❌ Error: ${e.message}", Toast.LENGTH_LONG).show()
+            }
     }
 }
 // --------------------------------------------<<< End of File >>>------------------------------------------
