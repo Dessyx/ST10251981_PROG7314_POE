@@ -18,14 +18,12 @@ class StepsLineGraphView @JvmOverloads constructor(
     private val dataPoints = mutableListOf<Pair<Float, Float>>()
     
 
-    private val yAxisIncrement = 2500f
-    private val maxYAxisSteps = 12500f
-    
     // Data for the graph
     private var stepsData: Map<String, Int> = emptyMap()
     
-    // Y-axis labels
-    private val yAxisLabels = listOf("12.5k", "10k", "7.5k", "5k", "2.5k", "0")
+    // Dynamic Y-axis properties
+    private var maxSteps = 0
+    private var yAxisLabels = mutableListOf<String>()
     
     // X-axis labels (day names)
     private val xAxisLabels = mutableListOf<String>()
@@ -44,6 +42,9 @@ class StepsLineGraphView @JvmOverloads constructor(
             android.util.Log.d("StepsLineGraphView", "⚠️ No steps data to display")
             return
         }
+        
+        // Calculate dynamic Y-axis based on actual data
+        calculateDynamicYAxis()
         
         val width = width.toFloat()
         val height = height.toFloat()
@@ -76,7 +77,7 @@ class StepsLineGraphView @JvmOverloads constructor(
             
             val x = leftPadding + (i * graphWidth / 6)
 
-            val yRatio = (steps.toFloat() / maxYAxisSteps).coerceAtMost(1f)
+            val yRatio = (steps.toFloat() / maxSteps).coerceAtMost(1f)
             val y = height - padding - (yRatio * graphHeight)
             
             dataPoints.add(Pair(x, y))
@@ -84,6 +85,34 @@ class StepsLineGraphView @JvmOverloads constructor(
         }
         
         android.util.Log.d("StepsLineGraphView", "✅ Calculated ${dataPoints.size} data points")
+    }
+    
+    private fun calculateDynamicYAxis() {
+        // Find the maximum steps value in the data
+        maxSteps = if (stepsData.isNotEmpty()) {
+            val maxValue = stepsData.values.maxOrNull() ?: 0
+            // Add 20% padding to the max value for better visualization
+            (maxValue * 1.2f).toInt()
+        } else {
+            1000 // Default fallback
+        }
+        
+        // Generate Y-axis labels dynamically
+        yAxisLabels.clear()
+        val numLabels = 6
+        for (i in 0 until numLabels) {
+            val value = (maxSteps * (numLabels - 1 - i)) / (numLabels - 1)
+            yAxisLabels.add(formatStepsValue(value))
+        }
+        
+        android.util.Log.d("StepsLineGraphView", "📊 Dynamic Y-axis: maxSteps=$maxSteps, labels=$yAxisLabels")
+    }
+    
+    private fun formatStepsValue(value: Int): String {
+        return when {
+            value >= 1000 -> "${value / 1000}k"
+            else -> value.toString()
+        }
     }
     
     override fun onDraw(canvas: Canvas) {
@@ -152,7 +181,8 @@ class StepsLineGraphView @JvmOverloads constructor(
     }
     
     private fun drawGridLines(canvas: Canvas) {
-        paint.color = Color.LTGRAY
+        // Minimalistic horizontal grid lines only
+        paint.color = Color.BLACK
         paint.strokeWidth = 1f
         paint.style = Paint.Style.STROKE
         paint.isAntiAlias = true
@@ -165,22 +195,19 @@ class StepsLineGraphView @JvmOverloads constructor(
         val graphWidth = width - leftPadding - padding
         val graphHeight = height - 2 * padding
 
+        // Only draw horizontal grid lines for Y-axis
         for (i in yAxisLabels.indices) {
             val y = padding + (i * graphHeight / (yAxisLabels.size - 1))
             canvas.drawLine(leftPadding, y, width - padding, y, paint)
-        }
-
-        for (i in 0..6) {
-            val x = leftPadding + (i * graphWidth / 6)
-            canvas.drawLine(x, padding, x, height - padding, paint)
         }
     }
     
     private fun drawLineGraph(canvas: Canvas) {
         if (dataPoints.size < 2) return
         
-        paint.color = Color.BLUE
-        paint.strokeWidth = 4f
+        // Minimalistic black line
+        paint.color = Color.BLACK
+        paint.strokeWidth = 3f
         paint.style = Paint.Style.STROKE
         paint.isAntiAlias = true
         
@@ -195,16 +222,13 @@ class StepsLineGraphView @JvmOverloads constructor(
     }
     
     private fun drawDataPoints(canvas: Canvas) {
-        paint.color = Color.BLUE
+        // Minimalistic black dots
+        paint.color = Color.BLACK
         paint.style = Paint.Style.FILL
         paint.isAntiAlias = true
         
         for (point in dataPoints) {
-            paint.color = Color.WHITE
-            canvas.drawCircle(point.first, point.second, 8f, paint)
-
-            paint.color = Color.BLUE
-            canvas.drawCircle(point.first, point.second, 5f, paint)
+            canvas.drawCircle(point.first, point.second, 4f, paint)
         }
     }
     
