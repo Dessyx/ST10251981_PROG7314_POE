@@ -14,6 +14,8 @@ class MoodBarChartView @JvmOverloads constructor(
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    private val moodOrder = listOf("Happy", "Excited", "Content", "Anxious", "Tired", "Sad")
     
     private val moodColors = mapOf(
         "Happy" to Color.parseColor("#FFFBD5"),      
@@ -48,6 +50,7 @@ class MoodBarChartView @JvmOverloads constructor(
     }
     
     fun updateMoodData(data: Map<String, Int>) {
+        android.util.Log.d("MoodBarChartView", "📊 Received mood data: $data")
         moodData.clear()
         moodData.putAll(data)
         maxValue = if (data.isNotEmpty()) data.values.maxOrNull() ?: 1 else 1
@@ -56,7 +59,7 @@ class MoodBarChartView @JvmOverloads constructor(
     
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        
+
         if (moodData.isEmpty()) {
             drawEmptyState(canvas)
             return
@@ -83,10 +86,11 @@ class MoodBarChartView @JvmOverloads constructor(
         
 
         var xOffset = margin + barSpacing / 2
-        
-         moodData.forEach { (mood, count) ->
-             val barHeight = (count.toFloat() / maxValue) * chartHeight
-             
+
+         val maxGridValue = maxValue.coerceAtLeast(5)
+         moodOrder.forEach { mood ->
+             val count = moodData[mood] ?: 0
+             val barHeight = (count.toFloat() / maxGridValue) * chartHeight
              paint.color = moodColors[mood] ?: Color.GRAY
              val barLeft = xOffset
              val barTop = margin + chartHeight - barHeight
@@ -97,11 +101,11 @@ class MoodBarChartView @JvmOverloads constructor(
              canvas.drawRoundRect(rect, cornerRadius, cornerRadius, paint)
             
             // Draw count on top of bar
-            textPaint.textSize = 24f
+            textPaint.textSize = 18f
             textPaint.color = Color.BLACK
             canvas.drawText(
                 count.toString(),
-                xOffset + barWidth / 2,
+                xOffset + barWidth / 2 + 15f, 
                 barTop - 10f,
                 textPaint
             )
@@ -117,12 +121,12 @@ class MoodBarChartView @JvmOverloads constructor(
             
             xOffset += barWidth + barSpacing
         }
-        
-        // Draw Y-axis grid lines
+
         val gridLineCount = 5
+        
         for (i in 0..gridLineCount) {
             val y = margin + (i * chartHeight / gridLineCount)
-            val value = (maxValue * (gridLineCount - i) / gridLineCount)
+            val value = (maxGridValue * (gridLineCount - i) / gridLineCount)
             
             // Draw grid line
             canvas.drawLine(margin, y, margin + chartWidth, y, gridPaint)

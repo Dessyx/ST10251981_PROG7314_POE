@@ -20,17 +20,24 @@ class StepsLineGraphView @JvmOverloads constructor(
 
     // Data for the graph
     private var stepsData: Map<String, Int> = emptyMap()
+    private var currentFilter = "week" // week, month, year
     
     // Dynamic Y-axis properties
     private var maxSteps = 0
     private var yAxisLabels = mutableListOf<String>()
-    
-    // X-axis labels (day names)
+
     private val xAxisLabels = mutableListOf<String>()
     
-    fun updateStepsData(data: Map<String, Int>) {
+    fun updateStepsData(data: Map<String, Int>, filter: String = "week") {
         stepsData = data
-        android.util.Log.d("StepsLineGraphView", "📊 Updating steps data: $data")
+        currentFilter = filter
+        android.util.Log.d("StepsLineGraphView", "📊 Updating steps data: $data with filter: $filter")
+        calculateDataPoints()
+        invalidate()
+    }
+    
+    fun updateFilter(filter: String) {
+        currentFilter = filter
         calculateDataPoints()
         invalidate()
     }
@@ -42,8 +49,7 @@ class StepsLineGraphView @JvmOverloads constructor(
             android.util.Log.d("StepsLineGraphView", "⚠️ No steps data to display")
             return
         }
-        
-        // Calculate dynamic Y-axis based on actual data
+
         calculateDynamicYAxis()
         
         val width = width.toFloat()
@@ -55,44 +61,86 @@ class StepsLineGraphView @JvmOverloads constructor(
         val graphHeight = height - 2 * padding
         
 
-        val calendar = Calendar.getInstance()
-        val last7Days = mutableListOf<String>()
-        xAxisLabels.clear()
+        val (timePeriods, labels) = generateTimePeriods()
         
-        for (i in 0 until 7) {
-            calendar.time = Date()
-            calendar.add(Calendar.DAY_OF_MONTH, -i)
-            val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
-            val dayName = SimpleDateFormat("EEE", Locale.getDefault()).format(calendar.time)
-            last7Days.add(0, date)
-            xAxisLabels.add(0, dayName)
-        }
-        
-        android.util.Log.d("StepsLineGraphView", "📅 Last 7 days: $last7Days")
-        android.util.Log.d("StepsLineGraphView", "📅 Day names: $xAxisLabels")
+        android.util.Log.d("StepsLineGraphView", "📅 Time periods: $timePeriods")
+        android.util.Log.d("StepsLineGraphView", "📅 Labels: $labels")
 
-        for (i in last7Days.indices) {
-            val date = last7Days[i]
-            val steps = stepsData[date] ?: 0
+        for (i in timePeriods.indices) {
+            val period = timePeriods[i]
+            val steps = stepsData[period] ?: 0
             
-            val x = leftPadding + (i * graphWidth / 6)
+            val x = leftPadding + (i * graphWidth / (timePeriods.size - 1))
 
-            val yRatio = (steps.toFloat() / maxSteps).coerceAtMost(1f)
+            val yRatio = (steps.toFloat() / maxSteps)
             val y = height - padding - (yRatio * graphHeight)
             
             dataPoints.add(Pair(x, y))
-            android.util.Log.d("StepsLineGraphView", "📍 Point $i: date=$date, steps=$steps, x=$x, y=$y, yRatio=$yRatio")
+            android.util.Log.d("StepsLineGraphView", "📍 Point $i: period=$period, steps=$steps, x=$x, y=$y, yRatio=$yRatio")
         }
         
         android.util.Log.d("StepsLineGraphView", "✅ Calculated ${dataPoints.size} data points")
+    }
+    
+    private fun generateTimePeriods(): Pair<List<String>, List<String>> {
+        val calendar = Calendar.getInstance()
+        val timePeriods = mutableListOf<String>()
+        val labels = mutableListOf<String>()
+        
+        when (currentFilter) {
+            "week" -> {
+                // Last 7 days
+                for (i in 0 until 7) {
+                    calendar.time = Date()
+                    calendar.add(Calendar.DAY_OF_MONTH, -i)
+                    val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
+                    val dayName = SimpleDateFormat("EEE", Locale.getDefault()).format(calendar.time)
+                    timePeriods.add(0, date)
+                    labels.add(0, dayName)
+                }
+            }
+            "month" -> {
+                // Last 4 weeks
+                for (i in 0 until 4) {
+                    calendar.time = Date()
+                    calendar.add(Calendar.WEEK_OF_YEAR, -i)
+                    val weekStart = calendar.time
+                    calendar.add(Calendar.DAY_OF_MONTH, 6)
+                    val weekEnd = calendar.time
+                    
+                    val weekKey = "Week ${4-i}"
+                    val weekLabel = "W${4-i}"
+                    timePeriods.add(0, weekKey)
+                    labels.add(0, weekLabel)
+                }
+            }
+            "year" -> {
+                // Last 12 months
+                for (i in 0 until 12) {
+                    calendar.time = Date()
+                    calendar.add(Calendar.MONTH, -i)
+                    val monthName = SimpleDateFormat("MMM", Locale.getDefault()).format(calendar.time)
+                    timePeriods.add(0, monthName)
+                    labels.add(0, monthName)
+                }
+            }
+        }
+        
+        xAxisLabels.clear()
+        xAxisLabels.addAll(labels)
+        
+        return Pair(timePeriods, labels)
     }
     
     private fun calculateDynamicYAxis() {
         // Find the maximum steps value in the data
         maxSteps = if (stepsData.isNotEmpty()) {
             val maxValue = stepsData.values.maxOrNull() ?: 0
-            // Add 20% padding to the max value for better visualization
-            (maxValue * 1.2f).toInt()
+            when {
+                maxValue >= 10000 -> (maxValue * 1.1f).toInt()
+                maxValue >= 5000 -> (maxValue * 1.15f).toInt()
+                else -> (maxValue * 1.2f).toInt()
+            }
         } else {
             1000 // Default fallback
         }
@@ -128,7 +176,6 @@ class StepsLineGraphView @JvmOverloads constructor(
             drawLineGraph(canvas)
             drawDataPoints(canvas)
         } else {
-            // Draw "No Data" message
             drawNoDataMessage(canvas)
         }
     }
@@ -154,7 +201,7 @@ class StepsLineGraphView @JvmOverloads constructor(
             paint.getTextBounds(text, 0, text.length, textBounds)
             val textY = y + (textBounds.height() / 2)
             
-            canvas.drawText(text, 10f, textY, paint)
+            canvas.drawText(text, 30f, textY, paint)
         }
     }
     
@@ -181,7 +228,6 @@ class StepsLineGraphView @JvmOverloads constructor(
     }
     
     private fun drawGridLines(canvas: Canvas) {
-        // Minimalistic horizontal grid lines only
         paint.color = Color.BLACK
         paint.strokeWidth = 1f
         paint.style = Paint.Style.STROKE
@@ -195,7 +241,6 @@ class StepsLineGraphView @JvmOverloads constructor(
         val graphWidth = width - leftPadding - padding
         val graphHeight = height - 2 * padding
 
-        // Only draw horizontal grid lines for Y-axis
         for (i in yAxisLabels.indices) {
             val y = padding + (i * graphHeight / (yAxisLabels.size - 1))
             canvas.drawLine(leftPadding, y, width - padding, y, paint)

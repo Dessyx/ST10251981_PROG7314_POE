@@ -9,10 +9,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.LayoutInflater
 import android.widget.RelativeLayout
+import android.widget.FrameLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.FragmentManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
@@ -26,17 +28,18 @@ class InsightsActivity : AppCompatActivity() {
     private lateinit var tvMoodEntriesCount: TextView
     private lateinit var tvStreakCount: TextView
     private lateinit var tvDiaryEntriesCount: TextView
-    private lateinit var tvDiaryStreakTitle: TextView
-    private lateinit var tvDiaryStreakDays: TextView
-    private lateinit var progressDiaryStreak: ProgressBar
+    private lateinit var streakContainer: FrameLayout
+    private lateinit var streakFragment: StreakContainerFragment
     private lateinit var filterCard: androidx.cardview.widget.CardView
     private lateinit var tvMoodCount: TextView
     private lateinit var tvWeightCount: TextView
     private lateinit var tvActivitiesCount: TextView
+    private lateinit var tvEntryCategoriesTitle: TextView
     private lateinit var btnWeek: TextView
     private lateinit var btnMonth: TextView
     private lateinit var btnYear: TextView
     private lateinit var tvStepsTitle: TextView
+    private lateinit var tvTotalSteps: TextView
     private lateinit var stepsGraphArea: StepsLineGraphView
     private lateinit var donutChart: DonutChartView
     private lateinit var moodBarChart: MoodBarChartView
@@ -47,10 +50,14 @@ class InsightsActivity : AppCompatActivity() {
     private lateinit var db: FirebaseFirestore
     
     // Data
-    private var currentFilter = "day" // day, week, month
+    private var currentFilter = "day" // day, week, month, custom
     private var currentTimeFilter = "week" // week, month, year
     private val moodData = mutableMapOf<String, Int>()
     private val stepsData = mutableListOf<Int>()
+    
+    // Custom date range
+    private var customStartDate: Long = 0L
+    private var customEndDate: Long = 0L
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,10 +82,7 @@ class InsightsActivity : AppCompatActivity() {
     
     override fun onResume() {
         super.onResume()
-
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            loadInsightsData()
-        }, 500)
+        loadInsightsData()
     }
     
     private fun initializeViews() {
@@ -86,18 +90,22 @@ class InsightsActivity : AppCompatActivity() {
         tvMoodEntriesCount = findViewById(R.id.tvMoodEntriesCount)
         tvStreakCount = findViewById(R.id.tvStreakCount)
         tvDiaryEntriesCount = findViewById(R.id.tvDiaryEntriesCount)
-        tvDiaryStreakTitle = findViewById(R.id.tvDiaryStreakTitle)
-        tvDiaryStreakDays = findViewById(R.id.tvDiaryStreakDays)
-        progressDiaryStreak = findViewById(R.id.progressDiaryStreak)
+        streakContainer = findViewById(R.id.streakContainer)
+        streakFragment = StreakContainerFragment.newInstance()
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.streakContainer, streakFragment)
+            .commit()
         filterCard = findViewById(R.id.filterCard)
 
         tvMoodCount = findViewById(R.id.tvMoodCount)
         tvWeightCount = findViewById(R.id.tvWeightCount)
         tvActivitiesCount = findViewById(R.id.tvActivitiesCount)
+        tvEntryCategoriesTitle = findViewById(R.id.tvEntryCategoriesTitle)
         btnWeek = findViewById(R.id.btnWeek)
         btnMonth = findViewById(R.id.btnMonth)
         btnYear = findViewById(R.id.btnYear)
         tvStepsTitle = findViewById(R.id.tvStepsTitle)
+        tvTotalSteps = findViewById(R.id.tvTotalSteps)
         stepsGraphArea = findViewById(R.id.stepsGraphArea)
         donutChart = findViewById(R.id.donutChart)
         moodBarChart = findViewById(R.id.moodBarChart)
@@ -126,26 +134,27 @@ class InsightsActivity : AppCompatActivity() {
     }
     
     private fun showFilterDialog() {
-        val options = arrayOf("Day", "Week", "Month")
-        val builder = androidx.appcompat.app.AlertDialog.Builder(this, R.style.WhiteDialogTheme)
-        builder.setTitle("Filter by")
-            .setItems(options) { _, which ->
-                val newFilter = when (which) {
-                    0 -> "day"
-                    1 -> "week"
-                    2 -> "month"
-                    else -> "day"
-                }
-                
-                if (newFilter != currentFilter) {
-                    currentFilter = newFilter
-                    
-                    
-                    loadInsightsData()
-                }
+        val bottomFilterFragment = BottomFilterFragment.newInstance()
+        
+        bottomFilterFragment.setOnFilterSelectedListener { filter ->
+            if (filter != currentFilter) {
+                currentFilter = filter
+                updateEntryCategoriesTitle()
+                loadInsightsData()
             }
-        val dialog = builder.create()
-        dialog.show()
+        }
+        
+        bottomFilterFragment.setOnCustomDateRangeSelectedListener { startDate, endDate ->
+            customStartDate = startDate
+            customEndDate = endDate
+            currentFilter = "custom"
+            updateEntryCategoriesTitle()
+            loadInsightsData()
+        }
+        
+        supportFragmentManager.beginTransaction()
+            .add(android.R.id.content, bottomFilterFragment)
+            .commit()
     }
     
     private fun loadInsightsData() {
@@ -155,46 +164,55 @@ class InsightsActivity : AppCompatActivity() {
             return
         }
 
-        // Load mood entries count
+        tvMoodEntriesCount.text = "0"
+        tvDiaryEntriesCount.text = "0"
+        tvStreakCount.text = "0"
+        tvMoodCount.text = "0"
+        tvWeightCount.text = "0"
+        tvActivitiesCount.text = "0"
+        tvTotalSteps.text = "0"
+
         loadMoodEntriesCount(currentUser.uid)
-        
-        // Load diary entries count
         loadDiaryEntriesCount(currentUser.uid)
-        
-        // Load streak data
         loadStreakData(currentUser.uid)
-        
-        
-        // Load diary streak
         loadDiaryStreak(currentUser.uid)
-        
-        // Load new data sections
         loadEntryCategories(currentUser.uid)
         updateStepsTitle()
+        updateEntryCategoriesTitle()
         loadStepsData(currentUser.uid)
-        
-        // Load mood data for bar chart
         loadMoodDataForChart(currentUser.uid)
     }
     
     private fun loadMoodEntriesCount(userId: String) {
+        val dateRange = getDateRange()
+        
+        // Load mood entries with date filtering
         db.collection("moodEntries")
             .whereEqualTo("userId", userId)
             .get()
             .addOnSuccessListener { moodDocuments ->
-                var totalMoodCount = moodDocuments.size()
-
-                for ((index, doc) in moodDocuments.documents.withIndex()) {
-                    val mood = doc.getString("mood")
-                    val dateKey = doc.getString("dateKey")
-                    val timestamp = doc.getLong("timestamp")
+                var totalMoodCount = 0
+                
+                // Filter by date range
+                for (document in moodDocuments) {
+                    val timestamp = getTimestampFromDocument(document)
+                    if (timestamp != null && timestamp >= dateRange.first && timestamp <= dateRange.second) {
+                        totalMoodCount++
+                    }
                 }
 
+                // Load diary entries with date filtering
                 db.collection("diaryEntries")
                     .whereEqualTo("userId", userId)
                     .get()
                     .addOnSuccessListener { diaryDocuments ->
-                        totalMoodCount += diaryDocuments.size()
+                        // Filter diary entries by date range
+                        for (document in diaryDocuments) {
+                            val timestamp = getTimestampFromDocument(document)
+                            if (timestamp != null && timestamp >= dateRange.first && timestamp <= dateRange.second) {
+                                totalMoodCount++
+                            }
+                        }
                         tvMoodEntriesCount.text = totalMoodCount.toString()
                     }
                     .addOnFailureListener { e ->
@@ -203,48 +221,61 @@ class InsightsActivity : AppCompatActivity() {
             }
             .addOnFailureListener { e ->
                 tvMoodEntriesCount.text = "0"
-                android.widget.Toast.makeText(this, "Error loading mood entries: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
             }
     }
     
     private fun loadDiaryEntriesCount(userId: String) {
-
+        val dateRange = getDateRange()
         
         db.collection("diaryEntries")
             .whereEqualTo("userId", userId)
             .get()
             .addOnSuccessListener { documents ->
-                tvDiaryEntriesCount.text = documents.size().toString()
+                var diaryCount = 0
+                
+                // Filter by date range
+                for (document in documents) {
+                    val timestamp = getTimestampFromDocument(document)
+                    if (timestamp != null && timestamp >= dateRange.first && timestamp <= dateRange.second) {
+                        diaryCount++
+                    }
+                }
+                
+                tvDiaryEntriesCount.text = diaryCount.toString()
             }
             .addOnFailureListener { e ->
-                Log.e("InsightsActivity", "Error loading diary entries", e)
                 tvDiaryEntriesCount.text = "0"
             }
     }
     
     private fun loadStreakData(userId: String) {
+        val dateRange = getDateRange()
         val allDates = mutableSetOf<String>()
         
-        // Get diary entries
+        // Get diary entries with date filtering
         db.collection("diaryEntries")
             .whereEqualTo("userId", userId)
             .get()
             .addOnSuccessListener { diaryDocs ->
                 for (document in diaryDocs) {
-                    val timestamp = document.getLong("timestamp") ?: 0L
-                    val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(timestamp))
-                    allDates.add(date)
+                    val timestamp = getTimestampFromDocument(document)
+                    if (timestamp != null && timestamp >= dateRange.first && timestamp <= dateRange.second) {
+                        val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(timestamp))
+                        allDates.add(date)
+                    }
                 }
                 
-                // Also get mood entries
+                // Also get mood entries with date filtering
                 db.collection("moodEntries")
                     .whereEqualTo("userId", userId)
                     .get()
                     .addOnSuccessListener { moodDocs ->
                         for (document in moodDocs) {
-                            val timestamp = document.getLong("timestamp") ?: 0L
-                            val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(timestamp))
-                            allDates.add(date)
+                            val timestamp = getTimestampFromDocument(document)
+                            if (timestamp != null && timestamp >= dateRange.first && timestamp <= dateRange.second) {
+                                val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(timestamp))
+                                allDates.add(date)
+                            }
                         }
                         
                         // Sort all dates
@@ -262,7 +293,6 @@ class InsightsActivity : AppCompatActivity() {
                     }
             }
             .addOnFailureListener { e ->
-                Log.e("InsightsActivity", "❌ Error loading streak data", e)
                 tvStreakCount.text = "0"
             }
     }
@@ -312,55 +342,49 @@ class InsightsActivity : AppCompatActivity() {
     
     
     private fun loadDiaryStreak(userId: String) {
-        
-        val calendar = Calendar.getInstance()
-        val currentMonth = calendar.get(Calendar.MONTH)
-        val currentYear = calendar.get(Calendar.YEAR)
-        
-        // Get first day of current month
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        val monthStart = calendar.timeInMillis
-        
-        // Get last day of current month
-        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
-        calendar.set(Calendar.HOUR_OF_DAY, 23)
-        calendar.set(Calendar.MINUTE, 59)
-        calendar.set(Calendar.SECOND, 59)
-        calendar.set(Calendar.MILLISECOND, 999)
-        val monthEnd = calendar.timeInMillis
-        val daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
-        
-
         db.collection("diaryEntries")
             .whereEqualTo("userId", userId)
-            .whereGreaterThanOrEqualTo("timestamp", monthStart)
-            .whereLessThanOrEqualTo("timestamp", monthEnd)
             .get()
             .addOnSuccessListener { diaryDocs ->
-                val entriesThisMonth = diaryDocs.size()
-                
-                
-                for ((index, document) in diaryDocs.documents.withIndex()) {
+                val entryDates = mutableSetOf<String>()
+
+                for (document in diaryDocs) {
                     val timestamp = document.getLong("timestamp") ?: 0L
                     val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(timestamp))
+                    entryDates.add(date)
                 }
 
-                val maxEntries = 30
-                progressDiaryStreak.max = maxEntries
-                progressDiaryStreak.progress = Math.min(entriesThisMonth, maxEntries)
-                tvDiaryStreakDays.text = "$entriesThisMonth entries this month"
+                val consecutiveDays = calculateConsecutiveDays(entryDates)
                 
+                val maxEntries = 30
+                streakFragment.updateStreakData(consecutiveDays, maxEntries)
+                streakFragment.updateTitle("Diary entry streak")
             }
             .addOnFailureListener { e ->
-                Log.e("InsightsActivity", "Error loading diary streak: ${e.message}", e)
-                android.widget.Toast.makeText(this, "Error loading diary streak: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
-                progressDiaryStreak.progress = 0
-                tvDiaryStreakDays.text = "0 entries this month"
+                streakFragment.updateStreakData(0, 30)
+                streakFragment.updateTitle("Diary entry streak")
             }
+    }
+    
+    private fun calculateConsecutiveDays(entryDates: Set<String>): Int {
+        if (entryDates.isEmpty()) return 0
+        
+        val calendar = Calendar.getInstance()
+        var consecutiveDays = 0
+
+        for (i in 0 until 365) {
+            calendar.time = Date()
+            calendar.add(Calendar.DAY_OF_MONTH, -i)
+            val dateString = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
+            
+            if (entryDates.contains(dateString)) {
+                consecutiveDays++
+            } else {
+                break
+            }
+        }
+        
+        return consecutiveDays
     }
     
     
@@ -372,6 +396,27 @@ class InsightsActivity : AppCompatActivity() {
         val now = calendar.timeInMillis
         
         when (currentFilter) {
+            "custom" -> {
+                val calendar = Calendar.getInstance()
+                
+                // Start of custom start date
+                calendar.timeInMillis = customStartDate
+                calendar.set(Calendar.HOUR_OF_DAY, 0)
+                calendar.set(Calendar.MINUTE, 0)
+                calendar.set(Calendar.SECOND, 0)
+                calendar.set(Calendar.MILLISECOND, 0)
+                val startOfDay = calendar.timeInMillis
+                
+                // End of custom end date
+                calendar.timeInMillis = customEndDate
+                calendar.set(Calendar.HOUR_OF_DAY, 23)
+                calendar.set(Calendar.MINUTE, 59)
+                calendar.set(Calendar.SECOND, 59)
+                calendar.set(Calendar.MILLISECOND, 999)
+                val endOfDay = calendar.timeInMillis
+                
+                return Pair(startOfDay, endOfDay)
+            }
             "day" -> {
                 // Start of today
                 calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -578,41 +623,81 @@ class InsightsActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { documents ->
                 
-                val stepsByDay = mutableMapOf<String, Int>()
+                val processedStepsData = processStepsDataByFilter(documents)
                 
-
-                for ((index, document) in documents.documents.withIndex()) {
-                    val steps = document.getLong("steps")?.toInt() ?: 0
-                    val timestamp = document.getLong("timestamp") ?: 0L
-                    val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(timestamp))
-                    
-                    
-                    if (steps > 0) {
-                        stepsByDay[date] = (stepsByDay[date] ?: 0) + steps
-                    }
-                }
-                
-                
-
-                updateStepsGraph(stepsByDay)
-
-                if (stepsByDay.isNotEmpty()) {
-                    val totalSteps = stepsByDay.values.sum()
-                    android.widget.Toast.makeText(this, "Loaded ${stepsByDay.size} days of steps data (Total: $totalSteps steps)", android.widget.Toast.LENGTH_SHORT).show()
-                } else {
-                    android.widget.Toast.makeText(this, "No steps data found for this period", android.widget.Toast.LENGTH_SHORT).show()
-                }
+                updateStepsGraph(processedStepsData)
+                updateTotalSteps(processedStepsData)
             }
             .addOnFailureListener { e ->
-                Log.e("InsightsActivity", "Error loading steps data", e)
-                android.widget.Toast.makeText(this, "Error loading steps data: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
-
                 updateStepsGraph(emptyMap())
+                updateTotalSteps(emptyMap())
             }
     }
     
     private fun updateStepsGraph(stepsByDay: Map<String, Int>) {
-        stepsGraphArea.updateStepsData(stepsByDay)
+        stepsGraphArea.updateStepsData(stepsByDay, currentTimeFilter)
+    }
+    
+    private fun processStepsDataByFilter(documents: com.google.firebase.firestore.QuerySnapshot): Map<String, Int> {
+        val processedData = mutableMapOf<String, Int>()
+        val calendar = Calendar.getInstance()
+        
+        when (currentTimeFilter) {
+            "week" -> {
+                // Process by day for the last 7 days
+                for (document in documents.documents) {
+                    val steps = document.getLong("steps")?.toInt() ?: 0
+                    val timestamp = document.getLong("timestamp") ?: 0L
+                    val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(timestamp))
+                    
+                    if (steps > 0) {
+                        processedData[date] = (processedData[date] ?: 0) + steps
+                    }
+                }
+            }
+            "month" -> {
+                // Process by week for the last 4 weeks
+                val currentWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR)
+                for (document in documents.documents) {
+                    val steps = document.getLong("steps")?.toInt() ?: 0
+                    val timestamp = document.getLong("timestamp") ?: 0L
+                    val date = Date(timestamp)
+                    calendar.time = date
+                    
+                    val weekOfYear = calendar.get(Calendar.WEEK_OF_YEAR)
+                    val weekNumber = currentWeek - weekOfYear + 1
+                    val weekKey = "Week ${weekNumber}"
+                    
+                    if (steps > 0) {
+                        processedData[weekKey] = (processedData[weekKey] ?: 0) + steps
+                    }
+                }
+            }
+            "year" -> {
+                // Process by month for the last 12 months
+                for (document in documents.documents) {
+                    val steps = document.getLong("steps")?.toInt() ?: 0
+                    val timestamp = document.getLong("timestamp") ?: 0L
+                    val date = Date(timestamp)
+                    val monthName = SimpleDateFormat("MMM", Locale.getDefault()).format(date)
+                    
+                    if (steps > 0) {
+                        processedData[monthName] = (processedData[monthName] ?: 0) + steps
+                    }
+                }
+            }
+        }
+        
+        return processedData
+    }
+    
+    private fun updateTotalSteps(stepsByDay: Map<String, Int>) {
+        val totalSteps = if (stepsByDay.isNotEmpty()) {
+            stepsByDay.values.sum()
+        } else {
+            0
+        }
+        tvTotalSteps.text = totalSteps.toString()
     }
     
     
@@ -624,6 +709,17 @@ class InsightsActivity : AppCompatActivity() {
             else -> "Steps for the week"
         }
         tvStepsTitle.text = title
+    }
+    
+    private fun updateEntryCategoriesTitle() {
+        val title = when (currentFilter) {
+            "day" -> "Today's Entry Categories"
+            "week" -> "This Week's Entry Categories"
+            "month" -> "This Month's Entry Categories"
+            "custom" -> "Custom Date Range Entry Categories"
+            else -> "Today's Entry Categories"
+        }
+        tvEntryCategoriesTitle.text = title
     }
     
     private fun getTimeFilterRange(): Pair<Long, Long> {
@@ -678,52 +774,131 @@ class InsightsActivity : AppCompatActivity() {
     //-------------------------------------------------------------------------
     // Load mood data for bar chart
     private fun loadMoodDataForChart(userId: String) {
-        
+        val dateRange = getDateRange()
         val moodCounts = mutableMapOf<String, Int>()
-        
 
-        val moodTypes = listOf("Happy", "Excited", "Content", "Anxious", "Tired", "Sad")
-        moodTypes.forEach { mood ->
-            moodCounts[mood] = 0
+        if (currentFilter == "day") {
+        } else {
+            val moodTypes = listOf("Happy", "Excited", "Content", "Anxious", "Tired", "Sad")
+            moodTypes.forEach { mood ->
+                moodCounts[mood] = 0
+            }
         }
         
-  
+
+        val moodQuery = db.collection("moodEntries").whereEqualTo("userId", userId).get()
+        val diaryQuery = db.collection("diaryEntries").whereEqualTo("userId", userId).get()
+        
+        var moodCompleted = false
+        var diaryCompleted = false
+        
+        fun updateChartIfReady() {
+            if (moodCompleted && diaryCompleted) {
+                moodBarChart.updateMoodData(moodCounts)
+            }
+        }
+        
+        moodQuery.addOnSuccessListener { moodDocuments ->
+            for (document in moodDocuments) {
+                val mood = document.getString("mood")
+                val timestamp = getTimestampFromDocument(document)
+
+                val shouldInclude = timestamp != null && timestamp >= dateRange.first && timestamp <= dateRange.second
+
+                if (mood != null && shouldInclude) {
+                    if (currentFilter == "day") {
+                        moodCounts[mood] = (moodCounts[mood] ?: 0) + 1
+                    } else {
+                        if (moodCounts.containsKey(mood)) {
+                            moodCounts[mood] = (moodCounts[mood] ?: 0) + 1
+                        }
+                    }
+                }
+            }
+            moodCompleted = true
+            updateChartIfReady()
+        }.addOnFailureListener { e ->
+            moodCompleted = true
+            updateChartIfReady()
+        }
+        
+        diaryQuery.addOnSuccessListener { diaryDocuments ->
+            for (document in diaryDocuments) {
+                val mood = document.getString("mood")
+                val timestamp = getTimestampFromDocument(document)
+                
+                val shouldInclude = timestamp != null && timestamp >= dateRange.first && timestamp <= dateRange.second
+                
+                if (mood != null && shouldInclude) {
+                    if (currentFilter == "day") {
+                        moodCounts[mood] = (moodCounts[mood] ?: 0) + 1
+                    } else {
+                        if (moodCounts.containsKey(mood)) {
+                            moodCounts[mood] = (moodCounts[mood] ?: 0) + 1
+                        }
+                    }
+                }
+            }
+            diaryCompleted = true
+            updateChartIfReady()
+        }.addOnFailureListener { e ->
+            diaryCompleted = true
+            updateChartIfReady()
+        }
+    }
+    
+    private fun loadAllMoodData(userId: String) {
+        val moodCounts = mutableMapOf<String, Int>()
+
+        if (currentFilter == "day") {
+        } else {
+            val moodTypes = listOf("Happy", "Excited", "Content", "Anxious", "Tired", "Sad")
+            moodTypes.forEach { mood ->
+                moodCounts[mood] = 0
+            }
+        }
+        
         db.collection("moodEntries")
             .whereEqualTo("userId", userId)
             .get()
             .addOnSuccessListener { moodDocuments ->
-                
                 for (document in moodDocuments) {
                     val mood = document.getString("mood")
-                    val timestamp = document.getLong("timestamp")
-                    if (mood != null && moodCounts.containsKey(mood)) {
-                        moodCounts[mood] = (moodCounts[mood] ?: 0) + 1
-                    }
-                }
-                
-                db.collection("diaryEntries")
-                    .whereEqualTo("userId", userId)
-                    .get()
-                    .addOnSuccessListener { diaryDocuments ->
-                        
-                        for (document in diaryDocuments) {
-                            val mood = document.getString("mood")
-                            val timestamp = document.getLong("timestamp")
-                            if (mood != null && moodCounts.containsKey(mood)) {
+                    val timestamp = getTimestampFromDocument(document)
+
+                    if (mood != null) {
+                        if (currentFilter == "day") {
+                            moodCounts[mood] = (moodCounts[mood] ?: 0) + 1
+                        } else {
+                            if (moodCounts.containsKey(mood)) {
                                 moodCounts[mood] = (moodCounts[mood] ?: 0) + 1
                             }
                         }
-                        
-                        
-                        // Update the bar chart
-                        moodBarChart.updateMoodData(moodCounts)
                     }
-                    .addOnFailureListener { e ->
-                        moodBarChart.updateMoodData(moodCounts)
-                    }
+                }
+                
+                moodBarChart.updateMoodData(moodCounts)
             }
             .addOnFailureListener { e ->
                 moodBarChart.updateMoodData(moodCounts)
             }
+    }
+    
+    private fun getTimestampFromDocument(document: com.google.firebase.firestore.DocumentSnapshot): Long? {
+        return try {
+            document.getLong("timestamp")
+        } catch (e: Exception) {
+            try {
+                val date = document.getDate("timestamp")
+                date?.time
+            } catch (e2: Exception) {
+                try {
+                    val timestampString = document.getString("timestamp")
+                    timestampString?.toLongOrNull()
+                } catch (e3: Exception) {
+                    null
+                }
+            }
+        }
     }
 }
