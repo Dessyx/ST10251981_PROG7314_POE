@@ -62,18 +62,16 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Language"
+                android:text="@string/language_label"
                 android:textStyle="bold"
                 android:textColor="@android:color/black"
                 android:layout_marginTop="16dp" />
-
-            <ImageView
-                android:id="@+id/imgLanguage"
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switchLanguage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_lang"
-                android:contentDescription="Language Icon"
-                android:layout_marginTop="8dp" />
+                android:text="English / Afrikaans"
+                android:layout_marginTop="8dp"/>
 
             <!-- Notifications -->
             <TextView

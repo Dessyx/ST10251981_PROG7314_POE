@@ -26,13 +26,13 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_filter"
-                android:contentDescription="Filter icon"
+                android:contentDescription="@string/filter_title"
                 android:layout_marginEnd="12dp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Filter"
+                android:text="@string/filter_title"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:textColor="@color/black" />
@@ -67,7 +67,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Day"
+                    android:text="@string/filter_day"
                     android:textSize="16sp"
                     android:textColor="@color/black" />
 
@@ -95,7 +95,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Week"
+                    android:text="@string/filter_week"
                     android:textSize="16sp"
                     android:textColor="@color/black" />
 
@@ -123,7 +123,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Month"
+                    android:text="@string/filter_month"
                     android:textSize="16sp"
                     android:textColor="@color/black" />
 
@@ -150,7 +150,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Custom"
+                    android:text="@string/filter_custom"
                     android:textSize="16sp"
                     android:textColor="@color/black" />
 

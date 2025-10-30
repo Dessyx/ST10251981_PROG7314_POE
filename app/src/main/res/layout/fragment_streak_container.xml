@@ -30,7 +30,7 @@
                 android:id="@+id/ivStreakIcon"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
-                android:contentDescription="Diary streak icon"
+                android:contentDescription="@string/streak_icon_desc"
                 android:padding="8dp"
                 android:src="@drawable/streak_balloon" />
 
@@ -40,7 +40,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginStart="12dp"
-                android:text="Diary entry streak for the month"
+                android:text="@string/streak_title"
                 android:textColor="@color/black"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -74,7 +74,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="9 days"
+                android:text="@string/streak_days"
                 android:textColor="@color/black"
                 android:textSize="14sp" />
         </LinearLayout>

@@ -14,7 +14,9 @@ class MainActivity : AppCompatActivity() {
     //-------------------------------------------------------------------------
     // Lifecycle
     override fun onCreate(savedInstanceState: Bundle?) {
+        LocaleHelper.setLocale(this, LocaleHelper.getLocale(this))
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->

@@ -35,6 +35,9 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var tvUserName: TextView
 
+    private lateinit var switchLanguage: SwitchMaterial
+
+
 
     //-------------------------------------------------------------------------
     // Lifecycle
@@ -42,6 +45,14 @@ class SettingsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
 
+        switchLanguage = findViewById(R.id.switchLanguage)
+        switchLanguage.isChecked = LocaleHelper.getLocale(this) == "af"
+
+        switchLanguage.setOnCheckedChangeListener { _, isChecked ->
+            val newLang = if (isChecked) "af" else "en"
+            LocaleHelper.setLocale(this, newLang)
+            recreate()
+        }
         // Firebase Auth
         auth = FirebaseAuth.getInstance()
 
