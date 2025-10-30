@@ -7,28 +7,31 @@
     android:layout_height="match_parent"
     android:padding="16dp">
 
-    <!-- Back Button -->
+    <!-- Header with back button -->
     <ImageView
         android:id="@+id/btnBack"
         android:layout_width="24dp"
         android:layout_height="24dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
         android:src="@drawable/ic_arrow_back"
         android:contentDescription="Back"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Screen Title -->
+    <!-- Title -->
     <TextView
-        android:id="@+id/screenTitle"
+        android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Calendar"
-        android:textSize="20sp"
+        android:textSize="24sp"
         android:textStyle="bold"
-        app:layout_constraintStart_toEndOf="@id/btnBack"
+        android:textColor="@color/black"
+        android:layout_marginTop="16dp"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
     <!-- Material Calendar -->
     <com.prolificinteractive.materialcalendarview.MaterialCalendarView
@@ -38,7 +41,7 @@
         android:layout_marginTop="16dp"
         app:mcv_showOtherDates="all"
         app:mcv_selectionColor="@color/light_blue"
-        app:layout_constraintTop_toBottomOf="@id/screenTitle"
+        app:layout_constraintTop_toBottomOf="@id/tvTitle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
@@ -51,38 +54,41 @@
         android:textStyle="bold"
         android:textSize="18sp"
         android:textColor="@android:color/black"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         app:layout_constraintTop_toBottomOf="@id/calendarView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
     <!-- Mood Legend Scroll -->
     <HorizontalScrollView
-        android:layout_width="match_parent"
+        android:id="@+id/legendScroll"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:importantForAccessibility="no"
+        android:layout_marginTop="4dp"
+        android:fillViewport="true"
         app:layout_constraintTop_toBottomOf="@id/tvMoodCodeHeader"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottomNav">
 
         <LinearLayout
             android:id="@+id/legendLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingVertical="8dp"/>
+            android:gravity="center"/>
     </HorizontalScrollView>
 
-    <!-- Bottom nav -->
+    <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNav"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="#ECE4FF"
-        app:menu="@menu/bottom_nav_menu"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:menu="@menu/bottom_nav_menu" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

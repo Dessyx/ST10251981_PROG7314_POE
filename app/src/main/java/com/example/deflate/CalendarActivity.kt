@@ -78,6 +78,11 @@ class CalendarActivity : AppCompatActivity() {
     private fun setupLegend() {
         legendLayout.removeAllViews() // clear old legend
 
+        // Make sure legendLayout centers all items
+        legendLayout.orientation = LinearLayout.HORIZONTAL
+        legendLayout.gravity = android.view.Gravity.CENTER
+        legendLayout.setPadding(0, 0, 0, 0)
+
         // Map of moods to colors
         val moodMap = mapOf(
             "Happy" to R.color.yellow,
@@ -96,40 +101,33 @@ class CalendarActivity : AppCompatActivity() {
             "Anxious" to R.drawable.mood_anxious,
             "Tired" to R.drawable.mood_tired,
             "Sad" to R.drawable.mood_sad,
-
         )
 
         moodMap.forEach { (mood, colorRes) ->
-
             // Container for button + label
             val itemLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = android.view.Gravity.CENTER
-                setPadding(16, 8, 16, 8)
+                setPadding(8, 0, 8, 0)
             }
 
-            // Mood button with centered icon and border
+            // Mood button (slightly smaller + centered)
             val moodButton = com.google.android.material.button.MaterialButton(this).apply {
-                layoutParams = LinearLayout.LayoutParams(120, 120).apply {
-                    setMargins(8, 8, 8, 8)
+                layoutParams = LinearLayout.LayoutParams(130, 130).apply {
+                    setMargins(8, 0, 8, 0)
                 }
-                cornerRadius = 60
+                cornerRadius = 65
                 backgroundTintList = ContextCompat.getColorStateList(context, colorRes)
-
-                // Border
                 strokeWidth = 3
                 strokeColor = ContextCompat.getColorStateList(context, android.R.color.black)
-
-                // Icon setup
                 icon = ContextCompat.getDrawable(context, moodIcons[mood] ?: 0)
                 iconTint = null
                 iconGravity =
                     com.google.android.material.button.MaterialButton.ICON_GRAVITY_TEXT_START
                 iconPadding = 0
-                text = "" // Ensure no text shifts icon
+                text = ""
             }
 
-            // Mood label
             val moodLabel = TextView(this).apply {
                 text = mood
                 textSize = 12f
@@ -253,10 +251,14 @@ class CalendarActivity : AppCompatActivity() {
                     true
                 }
 
-                R.id.nav_diary -> true
-                R.id.nav_calendar -> {
-                    startActivity(Intent(this, CalendarActivity::class.java))
+                R.id.nav_diary -> {
+                    startActivity(Intent(this, DiaryActivity::class.java))
                     finish()
+                    true
+                }
+
+                R.id.nav_calendar -> {
+                    // Already on Calendar, no need to restart
                     true
                 }
 
