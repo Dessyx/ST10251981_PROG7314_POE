@@ -76,32 +76,69 @@ class CalendarActivity : AppCompatActivity() {
 
     /** Populate the mood legend below the calendar */
     private fun setupLegend() {
-        legendLayout.removeAllViews()
+        legendLayout.removeAllViews() // clear old legend
 
-        moodColors.forEach { (moodName, colorId) ->
+        // Map of moods to colors
+        val moodMap = mapOf(
+            "Happy" to R.color.yellow,
+            "Chill" to R.color.orange,
+            "Excited" to R.color.red,
+            "Anxious" to R.color.purple,
+            "Tired" to R.color.green,
+            "Sad" to R.color.blue,
+        )
+
+        // Map of moods to icons
+        val moodIcons = mapOf(
+            "Happy" to R.drawable.mood_happy,
+            "Chill" to R.drawable.mood_content,
+            "Excited" to R.drawable.mood_excited,
+            "Anxious" to R.drawable.mood_anxious,
+            "Tired" to R.drawable.mood_tired,
+            "Sad" to R.drawable.mood_sad,
+
+        )
+
+        moodMap.forEach { (mood, colorRes) ->
+
+            // Container for button + label
             val itemLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = android.view.Gravity.CENTER
                 setPadding(16, 8, 16, 8)
             }
 
-            val moodButton = MaterialButton(this).apply {
-                layoutParams = LinearLayout.LayoutParams(120, 120)
+            // Mood button with centered icon and border
+            val moodButton = com.google.android.material.button.MaterialButton(this).apply {
+                layoutParams = LinearLayout.LayoutParams(120, 120).apply {
+                    setMargins(8, 8, 8, 8)
+                }
                 cornerRadius = 60
-                backgroundTintList = ContextCompat.getColorStateList(context, colorId)
+                backgroundTintList = ContextCompat.getColorStateList(context, colorRes)
+
+                // Border
                 strokeWidth = 3
                 strokeColor = ContextCompat.getColorStateList(context, android.R.color.black)
-                text = ""
+
+                // Icon setup
+                icon = ContextCompat.getDrawable(context, moodIcons[mood] ?: 0)
+                iconTint = null
+                iconGravity =
+                    com.google.android.material.button.MaterialButton.ICON_GRAVITY_TEXT_START
+                iconPadding = 0
+                text = "" // Ensure no text shifts icon
             }
 
+            // Mood label
             val moodLabel = TextView(this).apply {
-                text = moodName
+                text = mood
                 textSize = 12f
                 gravity = android.view.Gravity.CENTER
             }
 
             itemLayout.addView(moodButton)
             itemLayout.addView(moodLabel)
+
             legendLayout.addView(itemLayout)
         }
     }
