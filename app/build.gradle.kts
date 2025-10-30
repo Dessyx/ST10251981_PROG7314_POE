@@ -81,10 +81,11 @@ dependencies {
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.robolectric)
     testImplementation(libs.kotlinx.coroutines.test)
-    
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
+    // Firebase
     implementation(platform("com.google.firebase:firebase-bom:34.2.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
@@ -101,10 +102,27 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
-    //Biometrics auth
-    implementation ("androidx.biometric:biometric:1.2.0")
-    implementation (libs.androidx.biometric.ktx.v140alpha02)
-    implementation ("androidx.security:security-crypto:1.1.0")
-    implementation ("com.google.code.gson:gson:2.10.1")
-    
+    // Biometrics
+    implementation("androidx.biometric:biometric:1.2.0")
+    implementation(libs.androidx.biometric.ktx.v140alpha02)
+    implementation("androidx.security:security-crypto:1.1.0")
+
+    // Gson
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    //  MaterialCalendarView (correct fork)
+    implementation("com.github.mhiew:material-calendarview:2.0.1")
+
+    // ThreeTenABP for LocalDate and time API
+    implementation("com.jakewharton.threetenabp:threetenabp:1.4.4")
+
+    // Kotlin standard library
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.0")
+
+    // AndroidX Core and AppCompat
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+
+    // Material Components
+    implementation("com.google.android.material:material:1.11.0")
 }
