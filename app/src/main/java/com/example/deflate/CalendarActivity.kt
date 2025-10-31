@@ -84,12 +84,17 @@ class CalendarActivity : AppCompatActivity() {
     private fun setupLegend() {
         legendLayout.removeAllViews() // clear old legend
 
-        // Make sure legendLayout centers all items
-        legendLayout.orientation = LinearLayout.HORIZONTAL
-        legendLayout.gravity = android.view.Gravity.CENTER
-        legendLayout.setPadding(0, 0, 0, 0)
+        // Use GridLayout for 2 rows
+        val gridLayout = GridLayout(this).apply {
+            rowCount = 2
+            columnCount = 3
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            useDefaultMargins = true
+        }
 
-        // Map of moods to colors
         val moodMap = mapOf(
             "Happy" to R.color.yellow,
             "Chill" to R.color.orange,
@@ -99,7 +104,6 @@ class CalendarActivity : AppCompatActivity() {
             "Sad" to R.color.blue,
         )
 
-        // Map of moods to icons
         val moodIcons = mapOf(
             "Happy" to R.drawable.mood_happy,
             "Chill" to R.drawable.mood_content,
@@ -110,26 +114,20 @@ class CalendarActivity : AppCompatActivity() {
         )
 
         moodMap.forEach { (mood, colorRes) ->
-            // Container for button + label
             val itemLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = android.view.Gravity.CENTER
-                setPadding(8, 0, 8, 0)
             }
 
-            // Mood button (slightly smaller + centered)
             val moodButton = com.google.android.material.button.MaterialButton(this).apply {
-                layoutParams = LinearLayout.LayoutParams(130, 130).apply {
-                    setMargins(8, 0, 8, 0)
-                }
+                layoutParams = LinearLayout.LayoutParams(130, 130)
                 cornerRadius = 65
                 backgroundTintList = ContextCompat.getColorStateList(context, colorRes)
                 strokeWidth = 3
                 strokeColor = ContextCompat.getColorStateList(context, android.R.color.black)
                 icon = ContextCompat.getDrawable(context, moodIcons[mood] ?: 0)
                 iconTint = null
-                iconGravity =
-                    com.google.android.material.button.MaterialButton.ICON_GRAVITY_TEXT_START
+                iconGravity = com.google.android.material.button.MaterialButton.ICON_GRAVITY_TEXT_START
                 iconPadding = 0
                 text = ""
             }
@@ -143,8 +141,20 @@ class CalendarActivity : AppCompatActivity() {
             itemLayout.addView(moodButton)
             itemLayout.addView(moodLabel)
 
-            legendLayout.addView(itemLayout)
+            // Use proper GridLayout params for child
+            val params = GridLayout.LayoutParams().apply {
+                width = GridLayout.LayoutParams.WRAP_CONTENT
+                height = GridLayout.LayoutParams.WRAP_CONTENT
+                setMargins(8, 8, 8, 8)
+                rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f)
+                columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f)
+                setGravity(android.view.Gravity.CENTER)
+            }
+
+            gridLayout.addView(itemLayout, params)
         }
+
+        legendLayout.addView(gridLayout)
     }
 
     /** Setup calendar arrows and listeners */
