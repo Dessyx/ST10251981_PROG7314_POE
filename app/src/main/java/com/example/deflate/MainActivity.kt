@@ -14,7 +14,7 @@ class MainActivity : AppCompatActivity() {
     //-------------------------------------------------------------------------
     // Lifecycle
     override fun onCreate(savedInstanceState: Bundle?) {
-        LocaleHelper.setLocale(this, LocaleHelper.getLocale(this))
+        //LocaleHelper.setLocale(this, LocaleHelper.getLocale(this))
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         enableEdgeToEdge()
@@ -32,8 +32,8 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, SignUpActivity::class.java)
             startActivity(intent)
         }
-        
-        // Login link click listener
+
+        //Login link click listener
         val loginLink = findViewById<TextView>(R.id.login_link)
         loginLink?.setOnClickListener {
             val intent = Intent(this, SignInActivity::class.java)
@@ -41,4 +41,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 }
+
+
 // --------------------------------------------<<< End of File >>>------------------------------------------

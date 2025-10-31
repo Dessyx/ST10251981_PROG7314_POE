@@ -44,7 +44,6 @@
     <string name="filter">Filter</string>
     <string name="filter_description">Filter your mood by day, week or month</string>
     <string name="app_title">DEFLATE</string>
-    <string name="lets_begin">C:\\path\\to\\file</string>
     <string name="sign_in">Sign In</string>
     <string name="username">Username</string>
     <string name="enter_username">Enter your username</string>
@@ -87,14 +86,18 @@
     <string name="please_sign_in_to_save_activities">Please sign in to save activities</string>
     <string name="please_enter_valid_weight">Please enter valid weight</string>
     <string name="please_enter_valid_steps">Please enter valid steps</string>
-    <string name="weight_format">Weight: %1$s kg</string>
     <string name="steps_format">Steps: %1$d</string>
     <string name="activities_saved_successfully">Activities saved successfully</string>
-    <string name="failed_to_save_activities">Failed to save activities</string>
+
     <string name="weight_default">0</string>
     <string name="steps_default">0</string>
     <string name="please_sign_in_to_view_activities">Please sign in to view activities</string>
     <string name="error_loading_weight_data">Error loading weight data</string>
     <string name="error_loading_steps_data">Error loading steps data</string>
+    <string name="lets_begin">Let\s Begin!</string>
+    <string name="weight_format">%.1f kg</string>
+    <string name="failed_to_save_activities">Failed to save activities</string>
+    <string name="language_changed">Language changed</string>
+
 </resources>
 

@@ -39,6 +39,12 @@ class ActivitiesActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val lang = prefs.getString("app_language", "en") ?: "en"
+        LocaleHelper.setLocale(this, lang) // <-- set locale
+
+        enableEdgeToEdge()
         setContentView(R.layout.activity_activities)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.activities_layout)) { v, insets ->

@@ -45,6 +45,12 @@ class DiaryActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val lang = prefs.getString("app_language", "en") ?: "en"
+        LocaleHelper.setLocale(this, lang) // <-- set locale
+
+        enableEdgeToEdge()
         setContentView(R.layout.activity_diary)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.diary_layout)) { v, insets ->

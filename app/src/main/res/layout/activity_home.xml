@@ -88,7 +88,7 @@
                         app:strokeColor="@android:color/black"
                         app:strokeWidth="1dp" />
 
-                    <!-- Mood buttons grid (ContentDescriptions kept) -->
+                    <!-- Mood buttons grid  -->
                     <GridLayout
                         android:id="@+id/gridMoods"
                         android:layout_width="219dp"
@@ -103,8 +103,78 @@
                         android:rowCount="2"
                         android:rowOrderPreserved="false"
                         android:useDefaultMargins="true">
-                        <!-- Mood buttons remain the same -->
+                        <!-- Happy -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnMoodHappy"
+                            style="?attr/materialButtonOutlinedStyle"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:contentDescription="Happy"
+                            app:backgroundTint="@color/yellow"
+                            app:cornerRadius="40dp"
+                            app:icon="@drawable/mood_happy"
+                            app:iconTint="@android:color/black" />
+
+                        <!-- Sad -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnMoodSad"
+                            style="?attr/materialButtonOutlinedStyle"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:contentDescription="Sad"
+                            app:backgroundTint="@color/blue"
+                            app:cornerRadius="40dp"
+                            app:icon="@drawable/mood_sad"
+                            app:iconTint="@android:color/black" />
+                        <!-- Anxious -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnMoodAnxious"
+                            style="?attr/materialButtonOutlinedStyle"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:contentDescription="Anxious"
+                            app:backgroundTint="@color/purple"
+                            app:cornerRadius="50dp"
+                            app:icon="@drawable/mood_anxious"
+                            app:iconTint="@android:color/black" />
+
+                        <!-- Tired -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnMoodTired"
+                            style="?attr/materialButtonOutlinedStyle"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:contentDescription="Tired"
+                            app:backgroundTint="@color/green"
+                            app:cornerRadius="40dp"
+                            app:icon="@drawable/mood_tired"
+                            app:iconTint="@android:color/black" />
+                        <!-- Excited -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnMoodExcited"
+                            style="?attr/materialButtonOutlinedStyle"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:contentDescription="Excited"
+                            app:backgroundTint="@color/red"
+                            app:cornerRadius="40dp"
+                            app:icon="@drawable/mood_excited"
+                            app:iconTint="@android:color/black" />
+
+                        <!-- Content -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnMoodContent"
+                            style="?attr/materialButtonOutlinedStyle"
+                            android:layout_width="65dp"
+                            android:layout_height="65dp"
+                            android:contentDescription="Content"
+                            app:backgroundTint="@color/orange"
+                            app:cornerRadius="40dp"
+                            app:icon="@drawable/mood_content"
+                            app:iconTint="@android:color/black" />
                     </GridLayout>
+
+
 
                 </RelativeLayout>
             </androidx.cardview.widget.CardView>

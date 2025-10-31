@@ -45,6 +45,12 @@ class CalendarActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_calendar)
 
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val lang = prefs.getString("app_language", "en") ?: "en"
+        LocaleHelper.setLocale(this, lang) // <-- set locale
+
+        enableEdgeToEdge()
+
         bottomNav = findViewById(R.id.bottomNav)
         setupBottomNav()
 

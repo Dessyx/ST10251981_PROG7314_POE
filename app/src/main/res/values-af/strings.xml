@@ -45,7 +45,6 @@
     <string name="filter">Filtreer</string>
     <string name="filter_description">Filtreer jou bui per dag, week of maand</string>
     <string name="app_title">DEFLATE</string>
-    <string name="lets_begin">Kom ons begin!</string>
     <string name="sign_in">Teken Aan</string>
     <string name="username">Gebruikersnaam</string>
     <string name="enter_username">Voer jou gebruikersnaam in</string>
@@ -88,15 +87,19 @@
     <string name="please_sign_in_to_save_activities">Teken asseblief aan om aktiwiteite te stoor</string>
     <string name="please_enter_valid_weight">Voer asseblief geldige gewig in</string>
     <string name="please_enter_valid_steps">Voer asseblief geldige stappe in</string>
-    <string name="weight_format">Gewig: %1$s kg</string>
     <string name="steps_format">Stappe: %1$d</string>
     <string name="activities_saved_successfully">Aktiwiteite suksesvol gestoor</string>
-    <string name="failed_to_save_activities">Kon nie aktiwiteite stoor nie</string>
+
     <string name="weight_default">0</string>
     <string name="steps_default">0</string>
     <string name="please_sign_in_to_view_activities">Teken asseblief aan om aktiwiteite te sien</string>
     <string name="error_loading_weight_data">Fout tydens laai van gewigdata</string>
     <string name="error_loading_steps_data">Fout tydens laai van stappe-data</string>
+    <string name="lets_begin">Kom ons begin!</string>
+    <string name="weight_format">%.1f kg</string>
+    <string name="failed_to_save_activities">Kon nie aktiwiteite stoor nie</string>
+    <string name="language_changed">Taal verander</string>
+
 </resources>
 
 
