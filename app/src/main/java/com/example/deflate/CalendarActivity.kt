@@ -67,9 +67,10 @@ class CalendarActivity : BaseActivity() {
         // Adjust for system insets
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.calendar_layout)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
             insets
         }
+
     }
 
     private fun navigateToHome() {
