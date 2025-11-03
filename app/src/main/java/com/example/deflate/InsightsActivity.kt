@@ -22,7 +22,7 @@ import java.util.*
 import java.util.Calendar
 import android.util.Log
 
-class InsightsActivity : AppCompatActivity() {
+class InsightsActivity : BaseActivity() {
     
     private lateinit var btnBack: ImageView
     private lateinit var tvMoodEntriesCount: TextView

@@ -15,7 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
-class GitHubAuthActivity : AppCompatActivity() {
+class GitHubAuthActivity : BaseActivity() {
 
     companion object {
         private const val TAG = "GitHubAuthActivity"

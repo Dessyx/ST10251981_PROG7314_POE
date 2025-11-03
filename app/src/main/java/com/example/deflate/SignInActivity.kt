@@ -38,7 +38,7 @@ import androidx.core.content.ContextCompat
 
 //-------------------------------------------------------------------------
 // Sign In screen activity
-class SignInActivity : AppCompatActivity() {
+class SignInActivity : BaseActivity() {
 
 
     companion object {

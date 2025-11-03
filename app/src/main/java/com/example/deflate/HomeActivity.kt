@@ -28,7 +28,7 @@ import android.util.Log
 
 //-------------------------------------------------------------------------
 // Home screen activity
-class HomeActivity : AppCompatActivity() {
+class HomeActivity : BaseActivity() {
     //-------------------------------------------------------------------------
     // State and dependencies
     private lateinit var auth: FirebaseAuth

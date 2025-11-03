@@ -20,7 +20,7 @@ import android.graphics.drawable.shapes.OvalShape
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import java.util.*
 
-class CalendarActivity : AppCompatActivity() {
+class CalendarActivity : BaseActivity() {
 
     private lateinit var btnBack: ImageView
     private lateinit var legendLayout: LinearLayout
@@ -45,9 +45,6 @@ class CalendarActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_calendar)
 
-        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
-        val lang = prefs.getString("app_language", "en") ?: "en"
-        LocaleHelper.setLocale(this, lang) // <-- set locale
 
         enableEdgeToEdge()
 

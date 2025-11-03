@@ -16,7 +16,7 @@ import java.util.Locale
 
 //-------------------------------------------------------------------------
 // Diary screen activity
-class DiaryActivity : AppCompatActivity() {
+class DiaryActivity : BaseActivity() {
 
     //-------------------------------------------------------------------------
     // UI references
@@ -46,9 +46,6 @@ class DiaryActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
-        val lang = prefs.getString("app_language", "en") ?: "en"
-        LocaleHelper.setLocale(this, lang) // <-- set locale
 
         enableEdgeToEdge()
         setContentView(R.layout.activity_diary)

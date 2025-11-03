@@ -20,7 +20,7 @@ import java.util.Date
 
 //-------------------------------------------------------------------------
 // Activity screen activity
-class ActivitiesActivity : AppCompatActivity() {
+class ActivitiesActivity : BaseActivity() {
 
     private lateinit var etWeight: EditText  // Declarations
     private lateinit var etSteps: EditText
@@ -40,9 +40,6 @@ class ActivitiesActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
-        val lang = prefs.getString("app_language", "en") ?: "en"
-        LocaleHelper.setLocale(this, lang) // <-- set locale
 
         enableEdgeToEdge()
         setContentView(R.layout.activity_activities)

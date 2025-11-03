@@ -10,22 +10,25 @@ import androidx.core.view.WindowInsetsCompat
 
 //-------------------------------------------------------------------------
 // Landing screen activity
-class MainActivity : AppCompatActivity() {
+class MainActivity : BaseActivity() {
     //-------------------------------------------------------------------------
     // Lifecycle
     override fun onCreate(savedInstanceState: Bundle?) {
-        //LocaleHelper.setLocale(this, LocaleHelper.getLocale(this))
+        // Set the app locale before anything else
+        LocaleHelper.setLocale(this, LocaleHelper.getLocale(this))
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        //-------------------------------------------------------------------------
+
+
+    //-------------------------------------------------------------------------
         // Set up navigation buttons
         val letsBeginButton = findViewById<TextView>(R.id.lets_begin_button)
         letsBeginButton?.setOnClickListener {

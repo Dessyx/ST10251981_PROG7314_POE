@@ -19,7 +19,7 @@ import java.util.*
 
 //-------------------------------------------------------------------------
 // Sign Up screen activity
-class SignUpActivity : AppCompatActivity() {
+class SignUpActivity : BaseActivity() {
 
     companion object {
         private const val TAG = "SignUpActivity"
