@@ -9,7 +9,10 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.deflate.repository.DiaryRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -35,7 +38,7 @@ class DiaryActivity : BaseActivity() {
 
     // Firebase
     private lateinit var auth: FirebaseAuth
-    private lateinit var db: FirebaseFirestore
+    private lateinit var diaryRepository: DiaryRepository
 
     // State
     private var selectedMood: String? = null
@@ -57,7 +60,7 @@ class DiaryActivity : BaseActivity() {
         }
 
         auth = FirebaseAuth.getInstance()
-        db = FirebaseFirestore.getInstance()
+        diaryRepository = DiaryRepository(this)
 
         initializeViews()
         setupClickListeners()
@@ -111,7 +114,7 @@ class DiaryActivity : BaseActivity() {
     }
 
     //-------------------------------------------------------------------------
-    // Save diary entry to Firestore for the current user
+    // Save diary entry (local first, then sync)
     private fun saveDiaryEntry() {
         val user = auth.currentUser
         if (user == null) {
@@ -133,32 +136,33 @@ class DiaryActivity : BaseActivity() {
 
         val now = Date()
         val datePretty = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(now)
-        val dateKey = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(now)
         val username = user.email?.substringBefore("@") ?: "User"
 
-        val entry = hashMapOf(
-            "userId" to user.uid,
-            "username" to username,
-            "text" to text,
-            "mood" to mood,
-            "datePretty" to datePretty,
-            "timestamp" to System.currentTimeMillis()
+        val entry = DiaryEntry(
+            userId = user.uid,
+            username = username,
+            text = text,
+            mood = mood,
+            datePretty = datePretty,
+            timestamp = System.currentTimeMillis()
         )
 
         btnSave.isEnabled = false
-        db.collection("diaryEntries")
-            .add(entry)
-            .addOnSuccessListener {
-                Toast.makeText(this, "Entry saved!", Toast.LENGTH_SHORT).show()
+        
+        CoroutineScope(Dispatchers.Main).launch {
+            val result = diaryRepository.saveEntry(entry)
+            result.onSuccess {
+                Toast.makeText(this@DiaryActivity, "Entry saved!", Toast.LENGTH_SHORT).show()
                 etEntry.text?.clear()
                 selectedMood = null
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Failed to save: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-            .addOnCompleteListener {
+                btnSave.isEnabled = true
+            }.onFailure { e ->
+                Toast.makeText(this@DiaryActivity, "Entry saved locally. Will sync when online.", Toast.LENGTH_SHORT).show()
+                etEntry.text?.clear()
+                selectedMood = null
                 btnSave.isEnabled = true
             }
+        }
     }
 
     // Navigation helpers

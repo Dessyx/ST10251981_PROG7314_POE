@@ -94,10 +94,24 @@ class SignUpActivity : BaseActivity() {
 
         if (!validateInputs(name, surname, username, password)) return
 
+        // Check network connectivity
+        if (!isNetworkAvailable()) {
+            Toast.makeText(this, "Account creation requires internet connection. Please connect to the internet and try again.", Toast.LENGTH_LONG).show()
+            return
+        }
+
         registerButton.isEnabled = false
         registerButton.text = "Registering..."
 
         registerUserWithFirebase(name, surname, username, password)
+    }
+    
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager = getSystemService(android.content.Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+               capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
 
     // Input validation

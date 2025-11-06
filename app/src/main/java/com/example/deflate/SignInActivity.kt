@@ -3,6 +3,8 @@ package com.example.deflate
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Bundle
 import android.text.TextUtils
@@ -100,6 +102,33 @@ class SignInActivity : BaseActivity() {
 
         biometricSignInButton.isVisible = Biometrics.isAvailable(this)
 
+        // ========================================================================
+        // OFFLINE AUTHENTICATION EXPLANATION:
+        // ========================================================================
+        // Firebase Authentication REQUIRES internet for sign-in/sign-up because:
+        // 1. Password verification happens on Firebase servers (passwords are hashed server-side)
+        // 2. Account validation (check if account exists, is disabled, etc.)
+        // 3. Token generation (JWT tokens are cryptographically signed by Firebase)
+        // 4. Security features (rate limiting, brute force protection)
+        //
+        // HOWEVER, once a user is logged in, Firebase caches the authentication token locally.
+        // This cached token allows the app to work OFFLINE after the first login.
+        //
+        // FLOW:
+        // 1. First login: Requires internet → Firebase validates → Token cached locally
+        // 2. Subsequent app launches: Check for cached token → If exists, user is logged in → Works offline!
+        // 3. Token expiration: After ~1 hour, user needs to sign in again (requires internet)
+        // ========================================================================
+        
+        // Check if user is already logged in (cached session) - allows offline access
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            // User is already logged in, go directly to home (works offline)
+            // This is the key to offline functionality - cached authentication tokens!
+            handleSignInSuccess()
+            return
+        }
+
         // Activation after restart:
         // If the user previously enabled biometrics and the "needs_restart" flag is set,
         // we only mark the biometrics as active now (this code runs at app start).
@@ -143,6 +172,17 @@ class SignInActivity : BaseActivity() {
 
         if (!validateInputs(input, password)) return
 
+        // Check network connectivity
+        // NOTE: Authentication requires internet because:
+        // - Password verification happens on Firebase servers
+        // - Account validation requires server communication
+        // - Token generation requires Firebase servers
+        // Once logged in, the cached token allows offline access!
+        if (!isNetworkAvailable()) {
+            showError("Authentication requires internet connection. If you're already logged in, the app will work offline. Please connect to the internet to sign in or create an account.")
+            return
+        }
+
         signinButton.isEnabled = false
         signinButton.text = "Signing in..."
 
@@ -169,9 +209,16 @@ class SignInActivity : BaseActivity() {
                 }
                 .addOnFailureListener { e ->
                     showError("Error: ${e.message}")
-
                  }
         }
+    }
+    
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+               capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
 
     private fun signInWithEmail(email: String, password: String) {
@@ -183,8 +230,33 @@ class SignInActivity : BaseActivity() {
                 if (task.isSuccessful) {
                     handleSignInSuccess()
                 } else {
-                    val error = (task.exception as? FirebaseAuthException)?.errorCode ?: "UNKNOWN"
-                    showError("Login failed: $error")
+                    val exception = task.exception
+                    val errorMessage = when {
+                        exception is FirebaseAuthException -> {
+                            when (exception.errorCode) {
+                                "ERROR_NETWORK_REQUEST_FAILED" -> "Network error. Please check your internet connection."
+                                "ERROR_INTERNAL_ERROR" -> "Internal error. Please try again later."
+                                "ERROR_INVALID_EMAIL" -> "Invalid email address."
+                                "ERROR_WRONG_PASSWORD" -> "Incorrect password."
+                                "ERROR_USER_NOT_FOUND" -> "User not found."
+                                "ERROR_USER_DISABLED" -> "This account has been disabled."
+                                "ERROR_TOO_MANY_REQUESTS" -> "Too many failed attempts. Please try again later."
+                                else -> "Login failed: ${exception.errorCode}"
+                            }
+                        }
+                        else -> {
+                            val errorMsg = exception?.message ?: "Unknown error"
+                            if (errorMsg.contains("network", ignoreCase = true) ||
+                                errorMsg.contains("internet", ignoreCase = true) ||
+                                errorMsg.contains("connection", ignoreCase = true) ||
+                                errorMsg.contains("timeout", ignoreCase = true)) {
+                                "No internet connection. Please check your network and try again."
+                            } else {
+                                "Login failed: $errorMsg"
+                            }
+                        }
+                    }
+                    showError(errorMessage)
                 }
             }
     }
@@ -253,6 +325,10 @@ class SignInActivity : BaseActivity() {
     }
 
     private fun signInWithGoogle() {
+        if (!isNetworkAvailable()) {
+            Toast.makeText(this, "No internet connection. Please check your network and try again.", Toast.LENGTH_LONG).show()
+            return
+        }
         val signInIntent = googleSignInClient.signInIntent
         startActivityForResult(signInIntent, RC_SIGN_IN)
     }
@@ -315,6 +391,11 @@ class SignInActivity : BaseActivity() {
     private fun signInWithGitHub() {
         if (GITHUB_CLIENT_ID == "YOUR_GITHUB_CLIENT_ID") {
             Toast.makeText(this, "GitHub Client ID not configured.", Toast.LENGTH_LONG).show()
+            return
+        }
+        
+        if (!isNetworkAvailable()) {
+            Toast.makeText(this, "No internet connection. Please check your network and try again.", Toast.LENGTH_LONG).show()
             return
         }
         
@@ -476,9 +557,21 @@ class SignInActivity : BaseActivity() {
     }
     private fun handleBiometricSuccess() {
         Toast.makeText(this, "Biometric authentication successful ", Toast.LENGTH_SHORT).show()
-
-
-        handleSignInSuccess()
+        
+        // For biometric auth, check if we have a cached user session
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            // User is already authenticated (cached session)
+            handleSignInSuccess()
+        } else {
+            // No cached session, need internet for first-time biometric auth
+            if (!isNetworkAvailable()) {
+                Toast.makeText(this, "No internet connection. First-time biometric authentication requires internet.", Toast.LENGTH_LONG).show()
+            } else {
+                // This shouldn't happen, but handle it gracefully
+                Toast.makeText(this, "Please sign in with email/password first to enable biometric authentication.", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
 }

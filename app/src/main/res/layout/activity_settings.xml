@@ -208,6 +208,16 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Logout Button -->
+            <Button
+                android:id="@+id/btnLogout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/logout"
+                android:textColor="@android:color/black"
+                android:backgroundTint="#FFA500"
+                android:layout_marginTop="12dp" />
+
             <!-- Delete Account -->
             <Button
                 android:id="@+id/btnDeleteAccount"

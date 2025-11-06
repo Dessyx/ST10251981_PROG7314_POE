@@ -10,7 +10,8 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 
 class DiaryEntryAdapter(
-    private var entries: List<DiaryEntry>
+    private var entries: List<DiaryEntry>,
+    private val onEntryClick: (DiaryEntry) -> Unit = {}
 ) : RecyclerView.Adapter<DiaryEntryAdapter.DiaryEntryViewHolder>() {
 
     inner class DiaryEntryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -47,6 +48,15 @@ class DiaryEntryAdapter(
         // Keep the note icon black
         holder.moodIcon.setImageResource(R.drawable.ic_note)
         holder.moodIcon.clearColorFilter()
+        
+        // Set click listener on the entire item
+        holder.itemView.setOnClickListener {
+            onEntryClick(entry)
+        }
+        
+        // Make item clickable
+        holder.itemView.isClickable = true
+        holder.itemView.isFocusable = true
     }
 
     override fun getItemCount(): Int = entries.size

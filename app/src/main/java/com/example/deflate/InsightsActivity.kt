@@ -17,6 +17,12 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.FragmentManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.example.deflate.repository.DiaryRepository
+import com.example.deflate.repository.MoodRepository
+import com.example.deflate.repository.ActivityRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.Calendar
@@ -48,6 +54,9 @@ class InsightsActivity : BaseActivity() {
     // Firebase
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
+    private lateinit var diaryRepository: DiaryRepository
+    private lateinit var moodRepository: MoodRepository
+    private lateinit var activityRepository: ActivityRepository
     
     // Data
     private var currentFilter = "day" // day, week, month, custom
@@ -72,17 +81,34 @@ class InsightsActivity : BaseActivity() {
         
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
+        diaryRepository = DiaryRepository(this)
+        moodRepository = MoodRepository(this)
+        activityRepository = ActivityRepository(this)
         
         initializeViews()
         setupClickListeners()
         
-        
+        // Sync data when activity starts
+        syncAllData()
         loadInsightsData()
     }
     
     override fun onResume() {
         super.onResume()
+        syncAllData()
         loadInsightsData()
+    }
+    
+    private fun syncAllData() {
+        val user = auth.currentUser ?: return
+        CoroutineScope(Dispatchers.IO).launch {
+            diaryRepository.syncFromFirestore(user.uid)
+            diaryRepository.syncUnsyncedEntries(user.uid)
+            moodRepository.syncFromFirestore(user.uid)
+            moodRepository.syncUnsyncedMoodEntries(user.uid)
+            activityRepository.syncFromFirestore(user.uid)
+            activityRepository.syncUnsyncedActivities(user.uid)
+        }
     }
     
     private fun initializeViews() {
@@ -186,115 +212,91 @@ class InsightsActivity : BaseActivity() {
     private fun loadMoodEntriesCount(userId: String) {
         val dateRange = getDateRange()
         
-        // Load mood entries with date filtering
-        db.collection("moodEntries")
-            .whereEqualTo("userId", userId)
-            .get()
-            .addOnSuccessListener { moodDocuments ->
+        // Load from local database (offline support)
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val moodEntries = moodRepository.getAllMoodEntriesSync(userId)
+                val diaryEntries = diaryRepository.getAllEntriesSync(userId)
+                
                 var totalMoodCount = 0
                 
-                // Filter by date range
-                for (document in moodDocuments) {
-                    val timestamp = getTimestampFromDocument(document)
-                    if (timestamp != null && timestamp >= dateRange.first && timestamp <= dateRange.second) {
+                // Filter mood entries by date range
+                moodEntries.forEach { entry ->
+                    if (entry.timestamp >= dateRange.first && entry.timestamp <= dateRange.second) {
                         totalMoodCount++
                     }
                 }
-
-                // Load diary entries with date filtering
-                db.collection("diaryEntries")
-                    .whereEqualTo("userId", userId)
-                    .get()
-                    .addOnSuccessListener { diaryDocuments ->
-                        // Filter diary entries by date range
-                        for (document in diaryDocuments) {
-                            val timestamp = getTimestampFromDocument(document)
-                            if (timestamp != null && timestamp >= dateRange.first && timestamp <= dateRange.second) {
-                                totalMoodCount++
-                            }
-                        }
-                        tvMoodEntriesCount.text = totalMoodCount.toString()
+                
+                // Filter diary entries by date range
+                diaryEntries.forEach { entry ->
+                    if (entry.timestamp >= dateRange.first && entry.timestamp <= dateRange.second) {
+                        totalMoodCount++
                     }
-                    .addOnFailureListener { e ->
-                        tvMoodEntriesCount.text = totalMoodCount.toString()
-                    }
-            }
-            .addOnFailureListener { e ->
+                }
+                
+                tvMoodEntriesCount.text = totalMoodCount.toString()
+            } catch (e: Exception) {
+                Log.e("InsightsActivity", "Error loading mood entries count", e)
                 tvMoodEntriesCount.text = "0"
             }
+        }
     }
     
     private fun loadDiaryEntriesCount(userId: String) {
         val dateRange = getDateRange()
         
-        db.collection("diaryEntries")
-            .whereEqualTo("userId", userId)
-            .get()
-            .addOnSuccessListener { documents ->
-                var diaryCount = 0
-                
-                // Filter by date range
-                for (document in documents) {
-                    val timestamp = getTimestampFromDocument(document)
-                    if (timestamp != null && timestamp >= dateRange.first && timestamp <= dateRange.second) {
-                        diaryCount++
-                    }
+        // Load from local database (offline support)
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val entries = diaryRepository.getAllEntriesSync(userId)
+                val diaryCount = entries.count { entry ->
+                    entry.timestamp >= dateRange.first && entry.timestamp <= dateRange.second
                 }
-                
                 tvDiaryEntriesCount.text = diaryCount.toString()
-            }
-            .addOnFailureListener { e ->
+            } catch (e: Exception) {
+                Log.e("InsightsActivity", "Error loading diary entries count", e)
                 tvDiaryEntriesCount.text = "0"
             }
+        }
     }
     
     private fun loadStreakData(userId: String) {
         val dateRange = getDateRange()
         val allDates = mutableSetOf<String>()
         
-        // Get diary entries with date filtering
-        db.collection("diaryEntries")
-            .whereEqualTo("userId", userId)
-            .get()
-            .addOnSuccessListener { diaryDocs ->
-                for (document in diaryDocs) {
-                    val timestamp = getTimestampFromDocument(document)
-                    if (timestamp != null && timestamp >= dateRange.first && timestamp <= dateRange.second) {
-                        val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(timestamp))
+        // Load from local database (offline support)
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val diaryEntries = diaryRepository.getAllEntriesSync(userId)
+                val moodEntries = moodRepository.getAllMoodEntriesSync(userId)
+                
+                // Filter diary entries by date range
+                diaryEntries.forEach { entry ->
+                    if (entry.timestamp >= dateRange.first && entry.timestamp <= dateRange.second) {
+                        val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(entry.timestamp))
                         allDates.add(date)
                     }
                 }
                 
-                // Also get mood entries with date filtering
-                db.collection("moodEntries")
-                    .whereEqualTo("userId", userId)
-                    .get()
-                    .addOnSuccessListener { moodDocs ->
-                        for (document in moodDocs) {
-                            val timestamp = getTimestampFromDocument(document)
-                            if (timestamp != null && timestamp >= dateRange.first && timestamp <= dateRange.second) {
-                                val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(timestamp))
-                                allDates.add(date)
-                            }
-                        }
-                        
-                        // Sort all dates
-                        val sortedDates = allDates.sorted()
-                        
-                        // Count completed streaks (7+ consecutive days)
-                        val completedStreaks = countCompletedStreaks(sortedDates)
-                        tvStreakCount.text = completedStreaks.toString()
+                // Filter mood entries by date range
+                moodEntries.forEach { entry ->
+                    if (entry.timestamp >= dateRange.first && entry.timestamp <= dateRange.second) {
+                        val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(entry.timestamp))
+                        allDates.add(date)
                     }
-                    .addOnFailureListener { e ->
-                        // If no mood entries, just use diary data
-                        val sortedDates = allDates.sorted()
-                        val completedStreaks = countCompletedStreaks(sortedDates)
-                        tvStreakCount.text = completedStreaks.toString()
-                    }
-            }
-            .addOnFailureListener { e ->
+                }
+                
+                // Sort all dates
+                val sortedDates = allDates.sorted()
+                
+                // Count completed streaks (7+ consecutive days)
+                val completedStreaks = countCompletedStreaks(sortedDates)
+                tvStreakCount.text = completedStreaks.toString()
+            } catch (e: Exception) {
+                Log.e("InsightsActivity", "Error loading streak data", e)
                 tvStreakCount.text = "0"
             }
+        }
     }
     
     private fun countCompletedStreaks(dates: List<String>): Int {
@@ -342,15 +344,14 @@ class InsightsActivity : BaseActivity() {
     
     
     private fun loadDiaryStreak(userId: String) {
-        db.collection("diaryEntries")
-            .whereEqualTo("userId", userId)
-            .get()
-            .addOnSuccessListener { diaryDocs ->
+        // Load from local database (offline support)
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val entries = diaryRepository.getAllEntriesSync(userId)
                 val entryDates = mutableSetOf<String>()
 
-                for (document in diaryDocs) {
-                    val timestamp = document.getLong("timestamp") ?: 0L
-                    val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(timestamp))
+                entries.forEach { entry ->
+                    val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(entry.timestamp))
                     entryDates.add(date)
                 }
 
@@ -359,11 +360,12 @@ class InsightsActivity : BaseActivity() {
                 val maxEntries = 30
                 streakFragment.updateStreakData(consecutiveDays, maxEntries)
                 streakFragment.updateTitle("Diary entry streak")
-            }
-            .addOnFailureListener { e ->
+            } catch (e: Exception) {
+                Log.e("InsightsActivity", "Error loading diary streak", e)
                 streakFragment.updateStreakData(0, 30)
                 streakFragment.updateTitle("Diary entry streak")
             }
+        }
     }
     
     private fun calculateConsecutiveDays(entryDates: Set<String>): Int {
@@ -613,41 +615,44 @@ class InsightsActivity : BaseActivity() {
     private fun loadStepsData(userId: String) {
         val dateRange = getTimeFilterRange()
         
-        
-        // Get steps data for the selected time period
-        db.collection("activities")
-            .whereEqualTo("userId", userId)
-            .whereGreaterThanOrEqualTo("timestamp", dateRange.first)
-            .whereLessThanOrEqualTo("timestamp", dateRange.second)
-            .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.ASCENDING)
-            .get()
-            .addOnSuccessListener { documents ->
+        // Load from local database (offline support)
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val activities = activityRepository.getAllActivitiesSync(userId)
                 
-                val processedStepsData = processStepsDataByFilter(documents)
+                // Filter activities by date range and convert to QuerySnapshot-like structure
+                val filteredActivities = activities.filter { activity ->
+                    activity.timestamp >= dateRange.first && activity.timestamp <= dateRange.second &&
+                    activity.steps != null && activity.steps!! > 0
+                }.sortedBy { it.timestamp }
+                
+                // Convert to a format that processStepsDataByFilter can use
+                val processedStepsData = processStepsDataByFilter(filteredActivities)
                 
                 updateStepsGraph(processedStepsData)
                 updateTotalSteps(processedStepsData)
-            }
-            .addOnFailureListener { e ->
+            } catch (e: Exception) {
+                Log.e("InsightsActivity", "Error loading steps data", e)
                 updateStepsGraph(emptyMap())
                 updateTotalSteps(emptyMap())
             }
+        }
     }
     
     private fun updateStepsGraph(stepsByDay: Map<String, Int>) {
         stepsGraphArea.updateStepsData(stepsByDay, currentTimeFilter)
     }
     
-    private fun processStepsDataByFilter(documents: com.google.firebase.firestore.QuerySnapshot): Map<String, Int> {
+    private fun processStepsDataByFilter(activities: List<ActivityData>): Map<String, Int> {
         val processedData = mutableMapOf<String, Int>()
         val calendar = Calendar.getInstance()
         
         when (currentTimeFilter) {
             "week" -> {
                 // Process by day for the last 7 days
-                for (document in documents.documents) {
-                    val steps = document.getLong("steps")?.toInt() ?: 0
-                    val timestamp = document.getLong("timestamp") ?: 0L
+                for (activity in activities) {
+                    val steps = activity.steps ?: 0
+                    val timestamp = activity.timestamp
                     val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(timestamp))
                     
                     if (steps > 0) {
@@ -658,9 +663,9 @@ class InsightsActivity : BaseActivity() {
             "month" -> {
                 // Process by week for the last 4 weeks
                 val currentWeek = Calendar.getInstance().get(Calendar.WEEK_OF_YEAR)
-                for (document in documents.documents) {
-                    val steps = document.getLong("steps")?.toInt() ?: 0
-                    val timestamp = document.getLong("timestamp") ?: 0L
+                for (activity in activities) {
+                    val steps = activity.steps ?: 0
+                    val timestamp = activity.timestamp
                     val date = Date(timestamp)
                     calendar.time = date
                     
@@ -675,9 +680,9 @@ class InsightsActivity : BaseActivity() {
             }
             "year" -> {
                 // Process by month for the last 12 months
-                for (document in documents.documents) {
-                    val steps = document.getLong("steps")?.toInt() ?: 0
-                    val timestamp = document.getLong("timestamp") ?: 0L
+                for (activity in activities) {
+                    val steps = activity.steps ?: 0
+                    val timestamp = activity.timestamp
                     val date = Date(timestamp)
                     val monthName = SimpleDateFormat("MMM", Locale.getDefault()).format(date)
                     
@@ -785,120 +790,48 @@ class InsightsActivity : BaseActivity() {
             }
         }
         
-
-        val moodQuery = db.collection("moodEntries").whereEqualTo("userId", userId).get()
-        val diaryQuery = db.collection("diaryEntries").whereEqualTo("userId", userId).get()
-        
-        var moodCompleted = false
-        var diaryCompleted = false
-        
-        fun updateChartIfReady() {
-            if (moodCompleted && diaryCompleted) {
-                moodBarChart.updateMoodData(moodCounts)
-            }
-        }
-        
-        moodQuery.addOnSuccessListener { moodDocuments ->
-            for (document in moodDocuments) {
-                val mood = document.getString("mood")
-                val timestamp = getTimestampFromDocument(document)
-
-                val shouldInclude = timestamp != null && timestamp >= dateRange.first && timestamp <= dateRange.second
-
-                if (mood != null && shouldInclude) {
-                    if (currentFilter == "day") {
-                        moodCounts[mood] = (moodCounts[mood] ?: 0) + 1
-                    } else {
-                        if (moodCounts.containsKey(mood)) {
-                            moodCounts[mood] = (moodCounts[mood] ?: 0) + 1
-                        }
-                    }
-                }
-            }
-            moodCompleted = true
-            updateChartIfReady()
-        }.addOnFailureListener { e ->
-            moodCompleted = true
-            updateChartIfReady()
-        }
-        
-        diaryQuery.addOnSuccessListener { diaryDocuments ->
-            for (document in diaryDocuments) {
-                val mood = document.getString("mood")
-                val timestamp = getTimestampFromDocument(document)
+        // Load from local database (offline support)
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val moodEntries = moodRepository.getAllMoodEntriesSync(userId)
+                val diaryEntries = diaryRepository.getAllEntriesSync(userId)
                 
-                val shouldInclude = timestamp != null && timestamp >= dateRange.first && timestamp <= dateRange.second
-                
-                if (mood != null && shouldInclude) {
-                    if (currentFilter == "day") {
-                        moodCounts[mood] = (moodCounts[mood] ?: 0) + 1
-                    } else {
-                        if (moodCounts.containsKey(mood)) {
-                            moodCounts[mood] = (moodCounts[mood] ?: 0) + 1
-                        }
-                    }
-                }
-            }
-            diaryCompleted = true
-            updateChartIfReady()
-        }.addOnFailureListener { e ->
-            diaryCompleted = true
-            updateChartIfReady()
-        }
-    }
-    
-    private fun loadAllMoodData(userId: String) {
-        val moodCounts = mutableMapOf<String, Int>()
-
-        if (currentFilter == "day") {
-        } else {
-            val moodTypes = listOf("Happy", "Excited", "Content", "Anxious", "Tired", "Sad")
-            moodTypes.forEach { mood ->
-                moodCounts[mood] = 0
-            }
-        }
-        
-        db.collection("moodEntries")
-            .whereEqualTo("userId", userId)
-            .get()
-            .addOnSuccessListener { moodDocuments ->
-                for (document in moodDocuments) {
-                    val mood = document.getString("mood")
-                    val timestamp = getTimestampFromDocument(document)
-
-                    if (mood != null) {
+                // Process mood entries
+                moodEntries.forEach { entry ->
+                    val shouldInclude = entry.timestamp >= dateRange.first && entry.timestamp <= dateRange.second
+                    
+                    if (shouldInclude && entry.mood.isNotEmpty()) {
                         if (currentFilter == "day") {
-                            moodCounts[mood] = (moodCounts[mood] ?: 0) + 1
+                            moodCounts[entry.mood] = (moodCounts[entry.mood] ?: 0) + 1
                         } else {
-                            if (moodCounts.containsKey(mood)) {
-                                moodCounts[mood] = (moodCounts[mood] ?: 0) + 1
+                            if (moodCounts.containsKey(entry.mood)) {
+                                moodCounts[entry.mood] = (moodCounts[entry.mood] ?: 0) + 1
+                            }
+                        }
+                    }
+                }
+                
+                // Process diary entries
+                diaryEntries.forEach { entry ->
+                    val shouldInclude = entry.timestamp >= dateRange.first && entry.timestamp <= dateRange.second
+                    
+                    if (shouldInclude && entry.mood.isNotEmpty()) {
+                        if (currentFilter == "day") {
+                            moodCounts[entry.mood] = (moodCounts[entry.mood] ?: 0) + 1
+                        } else {
+                            if (moodCounts.containsKey(entry.mood)) {
+                                moodCounts[entry.mood] = (moodCounts[entry.mood] ?: 0) + 1
                             }
                         }
                     }
                 }
                 
                 moodBarChart.updateMoodData(moodCounts)
-            }
-            .addOnFailureListener { e ->
+            } catch (e: Exception) {
+                Log.e("InsightsActivity", "Error loading mood data for chart", e)
                 moodBarChart.updateMoodData(moodCounts)
-            }
-    }
-    
-    private fun getTimestampFromDocument(document: com.google.firebase.firestore.DocumentSnapshot): Long? {
-        return try {
-            document.getLong("timestamp")
-        } catch (e: Exception) {
-            try {
-                val date = document.getDate("timestamp")
-                date?.time
-            } catch (e2: Exception) {
-                try {
-                    val timestampString = document.getString("timestamp")
-                    timestampString?.toLongOrNull()
-                } catch (e3: Exception) {
-                    null
-                }
             }
         }
     }
+    
 }

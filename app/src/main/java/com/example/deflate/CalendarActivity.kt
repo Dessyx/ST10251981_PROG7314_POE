@@ -18,6 +18,10 @@ import java.text.SimpleDateFormat
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.OvalShape
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.example.deflate.repository.DiaryRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.*
 
 class CalendarActivity : BaseActivity() {
@@ -29,6 +33,7 @@ class CalendarActivity : BaseActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
     private lateinit var bottomNav: BottomNavigationView
+    private lateinit var diaryRepository: DiaryRepository
 
     // Mood colors map
     private val moodColors = mapOf(
@@ -58,11 +63,15 @@ class CalendarActivity : BaseActivity() {
 
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
+        diaryRepository = DiaryRepository(this)
 
         btnBack.setOnClickListener { navigateToHome() }
 
         setupLegend()
         setupCalendar()
+        
+        // Sync entries when activity starts
+        syncEntries()
 
         // Adjust for system insets
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.calendar_layout)) { v, insets ->
@@ -182,20 +191,28 @@ class CalendarActivity : BaseActivity() {
         val endCal = Calendar.getInstance().apply {
             set(date.year, date.month - 1, 1, 0, 0, 0)
             set(Calendar.DAY_OF_MONTH, getActualMaximum(Calendar.DAY_OF_MONTH))
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
             set(Calendar.MILLISECOND, 999)
         }
 
-        db.collection("diaryEntries")
-            .whereEqualTo("userId", user.uid)
-            .whereGreaterThanOrEqualTo("timestamp", startCal.timeInMillis)
-            .whereLessThanOrEqualTo("timestamp", endCal.timeInMillis)
-            .get()
-            .addOnSuccessListener { documents ->
+        val startTimestamp = startCal.timeInMillis
+        val endTimestamp = endCal.timeInMillis
+
+        // Load from local database (offline support)
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                // Get entries once (not a continuous flow for calendar)
+                val entries = diaryRepository.getAllEntriesSync(user.uid)
+                
                 calendarView.removeDecorators() // Clear previous decorations
 
-                documents.forEach { doc ->
-                    val mood = doc.getString("mood") ?: return@forEach
-                    val timestamp = doc.getLong("timestamp") ?: return@forEach
+                entries.filter { entry ->
+                    entry.timestamp >= startTimestamp && entry.timestamp <= endTimestamp
+                }.forEach { entry ->
+                    val mood = entry.mood
+                    val timestamp = entry.timestamp
 
                     val cal = Calendar.getInstance().apply { timeInMillis = timestamp }
                     val day = CalendarDay.from(
@@ -205,34 +222,65 @@ class CalendarActivity : BaseActivity() {
                     )
 
                     val color = ContextCompat.getColor(
-                        this,
+                        this@CalendarActivity,
                         moodColors[mood] ?: android.R.color.darker_gray
                     )
                     calendarView.addDecorator(MoodBackgroundDecorator(day, color))
                 }
-            }
-            .addOnFailureListener { e ->
+            } catch (e: Exception) {
                 Log.e("CalendarActivity", "Failed to load moods", e)
             }
+        }
     }
 
     /** Show mood for the selected day */
     private fun loadMoodForDay(date: CalendarDay) {
         val user = auth.currentUser ?: return
-        val datePretty = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(date.date)
+        
+        // Convert CalendarDay to Date
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.YEAR, date.year)
+            set(Calendar.MONTH, date.month - 1) // Calendar months are 0-based
+            set(Calendar.DAY_OF_MONTH, date.day)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val startOfDay = calendar.timeInMillis
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
+        val endOfDay = calendar.timeInMillis
 
-        db.collection("diaryEntries")
-            .whereEqualTo("userId", user.uid)
-            .whereEqualTo("datePretty", datePretty)
-            .get()
-            .addOnSuccessListener { query ->
-                val doc = query.documents.firstOrNull()
-                doc?.let {
-                    val mood = it.getString("mood") ?: "No mood"
-                    val text = it.getString("text") ?: ""
-                    Toast.makeText(this, "$mood: $text", Toast.LENGTH_SHORT).show()
+        // Load from local database (offline support)
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val entries = diaryRepository.getAllEntriesSync(user.uid)
+                val entryForDay = entries.firstOrNull { entry ->
+                    entry.timestamp >= startOfDay && entry.timestamp <= endOfDay
                 }
+                
+                entryForDay?.let {
+                    val mood = it.mood
+                    val text = it.text
+                    Toast.makeText(this@CalendarActivity, "$mood: $text", Toast.LENGTH_SHORT).show()
+                } ?: run {
+                    Toast.makeText(this@CalendarActivity, "No entry for this day", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e("CalendarActivity", "Failed to load mood for day", e)
             }
+        }
+    }
+    
+    private fun syncEntries() {
+        val user = auth.currentUser ?: return
+        CoroutineScope(Dispatchers.IO).launch {
+            diaryRepository.syncFromFirestore(user.uid)
+            diaryRepository.syncUnsyncedEntries(user.uid)
+        }
     }
 
     /** Full-day circular background shading decorator */
@@ -254,6 +302,7 @@ class CalendarActivity : BaseActivity() {
         super.onResume()
         calendarView.currentDate = CalendarDay.today()
         loadMoodsForMonth(CalendarDay.today())
+        syncEntries()
     }
 
     private fun setupBottomNav() {

@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.google.firebase.auth.FirebaseAuth
 
 //-------------------------------------------------------------------------
 // Landing screen activity
@@ -18,6 +19,29 @@ class MainActivity : BaseActivity() {
         LocaleHelper.setLocale(this, LocaleHelper.getLocale(this))
 
         super.onCreate(savedInstanceState)
+        
+        // ========================================================================
+        // OFFLINE ACCESS: Check for cached authentication session
+        // ========================================================================
+        // Firebase caches authentication tokens locally after first login.
+        // This allows users to access the app OFFLINE after they've logged in once.
+        // 
+        // How it works:
+        // 1. User signs in while online → Firebase validates → Token cached
+        // 2. User closes app and goes offline
+        // 3. User reopens app → This check finds cached token → User is logged in!
+        // 4. App works fully offline (diary, activities, mood, etc.)
+        // ========================================================================
+        val auth = FirebaseAuth.getInstance()
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            // User is already logged in (cached session) - works offline!
+            val intent = Intent(this, HomeActivity::class.java)
+            startActivity(intent)
+            finish()
+            return
+        }
+        
         setContentView(R.layout.activity_main)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->

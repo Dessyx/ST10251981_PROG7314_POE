@@ -98,6 +98,9 @@
     <string name="weight_format">%.1f kg</string>
     <string name="failed_to_save_activities">Failed to save activities</string>
     <string name="language_changed">Language changed</string>
+    <string name="logout">Logout</string>
+    <string name="logout_confirmation">Are you sure you want to logout?</string>
+    <string name="logged_out">Logged out successfully</string>
 
 </resources>
 

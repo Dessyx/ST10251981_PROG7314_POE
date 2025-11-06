@@ -25,6 +25,11 @@ import retrofit2.Callback
 import retrofit2.Response
 import com.google.firebase.firestore.FirebaseFirestore
 import android.util.Log
+import com.example.deflate.repository.MoodRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 //-------------------------------------------------------------------------
 // Home screen activity
@@ -223,6 +228,24 @@ class HomeActivity : BaseActivity() {
     //-------------------------------------------------------------------------
     // Fetch quotes by tag using Retrofit and update UI
     private fun fetchQuote(tag: String) {
+        // First try to load from cache (offline support)
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val db = com.example.deflate.database.AppDatabase.getDatabase(this@HomeActivity)
+                val cachedQuote = withContext(Dispatchers.IO) {
+                    db.quoteDao().getLatestQuote(tag)
+                }
+                
+                if (cachedQuote != null) {
+                    val quoteText = "\"${cachedQuote.body}\" \n- ${cachedQuote.author}"
+                    findViewById<TextView>(R.id.tvQuote).text = quoteText
+                }
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "Error loading cached quote", e)
+            }
+        }
+        
+        // Then try to fetch from API (if online)
         val call = RetrofitClient.instance.getQuotes(mood = tag)
 
         call.enqueue(object : Callback<QuoteResponse> {
@@ -236,6 +259,26 @@ class HomeActivity : BaseActivity() {
                         val firstQuote = quotes[0]
                         val quoteText = "\"${firstQuote.body}\" \n- ${firstQuote.author}"
                         findViewById<TextView>(R.id.tvQuote).text = quoteText
+                        
+                        // Cache the quote for offline use
+                        CoroutineScope(Dispatchers.IO).launch {
+                            try {
+                                val db = com.example.deflate.database.AppDatabase.getDatabase(this@HomeActivity)
+                                val quoteEntity = com.example.deflate.database.QuoteEntity(
+                                    tag = tag,
+                                    body = firstQuote.body,
+                                    author = firstQuote.author,
+                                    timestamp = System.currentTimeMillis()
+                                )
+                                db.quoteDao().insertQuote(quoteEntity)
+                                
+                                // Clean up old quotes (older than 30 days)
+                                val cutoffTime = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000)
+                                db.quoteDao().deleteOldQuotes(cutoffTime)
+                            } catch (e: Exception) {
+                                Log.e("HomeActivity", "Error caching quote", e)
+                            }
+                        }
                     } else {
                         tryNextTag()
                     }
@@ -245,6 +288,7 @@ class HomeActivity : BaseActivity() {
             }
 
             override fun onFailure(call: Call<QuoteResponse>, t: Throwable) {
+                // If API fails, try next tag (cached quote already shown if available)
                 tryNextTag()
             }
         })
@@ -392,7 +436,7 @@ class HomeActivity : BaseActivity() {
     }
 
     //-------------------------------------------------------------------------
-    // Save mood entry to Firestore for insights tracking
+    // Save mood entry (local first, then sync)
     private fun saveMoodEntryToFirestore(mood: String) {
         val currentUser = auth.currentUser
         if (currentUser == null) {
@@ -406,30 +450,25 @@ class HomeActivity : BaseActivity() {
         
         Log.d("HomeActivity", "Saving mood: $mood for user: ${currentUser.uid} on date: $dateKey")
 
-        // ALWAYS create a new entry - every mood selection counts!
-        val moodEntry = hashMapOf(
-            "userId" to currentUser.uid,
-            "username" to username,
-            "mood" to mood,
-            "dateKey" to dateKey,
-            "timestamp" to System.currentTimeMillis(),
-            "source" to "home_screen"
-        )
-
-        db.collection("moodEntries")
-            .add(moodEntry)
-            .addOnSuccessListener { documentReference ->
-                Log.d("HomeActivity", "✅ NEW mood entry saved with ID: ${documentReference.id}")
-                Log.d("HomeActivity", "📝 Saved data: $moodEntry")
-                Toast.makeText(this@HomeActivity, "Mood saved! (#${documentReference.id.takeLast(4)})", Toast.LENGTH_SHORT).show()
-                
-                // Refresh streak data to update the streak bar
+        val moodRepository = MoodRepository(this)
+        CoroutineScope(Dispatchers.Main).launch {
+            val result = moodRepository.saveMoodEntry(
+                userId = currentUser.uid,
+                username = username,
+                mood = mood,
+                dateKey = dateKey,
+                timestamp = System.currentTimeMillis(),
+                source = "home_screen"
+            )
+            
+            result.onSuccess {
+                Toast.makeText(this@HomeActivity, "Mood saved!", Toast.LENGTH_SHORT).show()
+                loadStreakData()
+            }.onFailure { e ->
+                Toast.makeText(this@HomeActivity, "Mood saved locally. Will sync when online.", Toast.LENGTH_SHORT).show()
                 loadStreakData()
             }
-            .addOnFailureListener { e ->
-                Log.e("HomeActivity", "❌ Error saving mood entry", e)
-                Toast.makeText(this@HomeActivity, "❌ Error: ${e.message}", Toast.LENGTH_LONG).show()
-            }
+        }
     }
 }
 // --------------------------------------------<<< End of File >>>------------------------------------------

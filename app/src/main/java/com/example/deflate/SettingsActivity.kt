@@ -21,6 +21,8 @@ import android.widget.Switch
 import com.example.deflate.LocaleHelper
 
 import android.util.Log
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 
 
 //-------------------------------------------------------------------------
@@ -70,21 +72,22 @@ class SettingsActivity : BaseActivity() {
         val etName: EditText = findViewById(R.id.etName)
         val etPassword: EditText = findViewById(R.id.etPassword)
         val btnSave: Button = findViewById(R.id.btnSave)
+        val btnLogout: Button = findViewById(R.id.btnLogout)
         val btnDeleteAccount: Button = findViewById(R.id.btnDeleteAccount)
 
 
         // Show logged-in user name or email
         val user = auth.currentUser
-
-        val currentName = user?.displayName ?: user?.email?.substringBefore("@") ?: "User"
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        
+        // Check for pending name update (offline support)
+        val pendingName = prefs.getString("pending_name_update", null)
+        val currentName = pendingName ?: user?.displayName ?: user?.email?.substringBefore("@") ?: "User"
 
         val biometricToggle = findViewById<BiometricToggleView>(R.id.biometricToggle)
-        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         val enabled = prefs.getBoolean("biometrics_enabled", false)
 
         biometricToggle.setChecked(enabled, animate = false)
-
-
 
         tvUserName.text = currentName
         etName.setText(currentName)
@@ -102,68 +105,59 @@ class SettingsActivity : BaseActivity() {
             val user = auth.currentUser
 
             if (user != null) {
-                val db = FirebaseFirestore.getInstance()
-                val userId = user.uid
-                val userMap = hashMapOf("username" to newName)
-                db.collection("users").document(userId)
-                    .set(userMap, SetOptions.merge())
-
-
-                // Update profile display name (and mirror to Firestore)
+                // Save name locally first (offline support)
                 if (newName.isNotEmpty() && newName != user.displayName) {
-                    val profileUpdates = UserProfileChangeRequest.Builder()
-                        .setDisplayName(newName)
-                        .build()
-
-                    user.updateProfile(profileUpdates).addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            tvUserName.text = newName
-                            Toast.makeText(this, "Name updated!", Toast.LENGTH_SHORT).show()
-
-                            // Store updated name in Firestore
-                            val userMap = hashMapOf("name" to newName)
-                            db.collection("users").document(userId)
-                                .set(userMap, SetOptions.merge())
-                                .addOnSuccessListener {
-                                    // Successfully stored in Firestore
-                                }
-                                .addOnFailureListener { e ->
-                                    Toast.makeText(
-                                        this,
-                                        "Failed to store name: ${e.message}",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-
-                        } else {
-                            Toast.makeText(
-                                this,
-                                "Failed to update name: ${task.exception?.message}",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
-                    }
+                    val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+                    prefs.edit().putString("pending_name_update", newName).apply()
+                    
+                    // Update UI immediately
+                    tvUserName.text = newName
+                    Toast.makeText(this, "Name saved locally. Will sync when online.", Toast.LENGTH_SHORT).show()
+                    
+                    // Try to sync to Firebase (if online)
+                    syncNameToFirebase(newName, user.uid)
                 }
 
-
-                // Update password
+                // Update password (requires internet)
                 if (newPass.isNotEmpty()) {
-                    user.updatePassword(newPass).addOnCompleteListener { passTask ->
-                        if (passTask.isSuccessful) {
-                            Toast.makeText(this, "Password updated!", Toast.LENGTH_SHORT)
-                                .show()
-                        } else {
-                            Toast.makeText(
-                                this,
-                                "Failed to update password: ${passTask.exception?.message}",
-                                Toast.LENGTH_LONG
-                            ).show()
+                    // Check if online
+                    val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+                    val network = connectivityManager.activeNetwork
+                    val capabilities = network?.let { connectivityManager.getNetworkCapabilities(it) }
+                    val isOnline = capabilities?.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) == true &&
+                                   capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                    
+                    if (isOnline) {
+                        user.updatePassword(newPass).addOnCompleteListener { passTask ->
+                            if (passTask.isSuccessful) {
+                                Toast.makeText(this, "Password updated!", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(
+                                    this,
+                                    "Failed to update password: ${passTask.exception?.message}",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
                         }
+                    } else {
+                        Toast.makeText(this, "Password update requires internet connection.", Toast.LENGTH_LONG).show()
                     }
                 }
             }
         }
 
+        // Logout
+        btnLogout.setOnClickListener {
+            // Show confirmation dialog
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(getString(R.string.logout))
+                .setMessage(getString(R.string.logout_confirmation))
+                .setPositiveButton(getString(R.string.logout)) { _, _ ->
+                    performLogout()
+                }
+                .setNegativeButton(getString(R.string.cancel), null)
+                .show()
+        }
 
         // Delete account
         btnDeleteAccount.setOnClickListener {
@@ -222,7 +216,6 @@ class SettingsActivity : BaseActivity() {
             }
         }
 
-
         //  Bottom navigation
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)
         bottomNav.selectedItemId = R.id.nav_settings
@@ -253,6 +246,88 @@ class SettingsActivity : BaseActivity() {
                 else -> false
             }
         }
+        
+        // Sync pending name updates on resume
+        syncPendingNameUpdate()
+    }
+    
+    private fun syncNameToFirebase(newName: String, userId: String) {
+        val user = auth.currentUser ?: return
+        
+        // Check if online
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val network = connectivityManager.activeNetwork
+        val capabilities = network?.let { connectivityManager.getNetworkCapabilities(it) }
+        val isOnline = capabilities?.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) == true &&
+                       capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        
+        if (!isOnline) {
+            return // Will sync later when online
+        }
+        
+        val db = FirebaseFirestore.getInstance()
+        
+        // Update profile display name
+        val profileUpdates = UserProfileChangeRequest.Builder()
+            .setDisplayName(newName)
+            .build()
+
+        user.updateProfile(profileUpdates).addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                // Store updated name in Firestore
+                val userMap = hashMapOf("name" to newName, "username" to newName)
+                db.collection("users").document(userId)
+                    .set(userMap, SetOptions.merge())
+                    .addOnSuccessListener {
+                        // Clear pending update
+                        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+                        prefs.edit().remove("pending_name_update").apply()
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e(TAG, "Failed to store name in Firestore", e)
+                    }
+            } else {
+                Log.e(TAG, "Failed to update profile", task.exception)
+            }
+        }
+    }
+    
+    private fun syncPendingNameUpdate() {
+        val user = auth.currentUser ?: return
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val pendingName = prefs.getString("pending_name_update", null)
+        
+        if (pendingName != null && pendingName.isNotEmpty()) {
+            syncNameToFirebase(pendingName, user.uid)
+        }
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        syncPendingNameUpdate()
+    }
+    
+    private fun performLogout() {
+        // Sign out from Firebase
+        auth.signOut()
+        
+        // Clear biometric preferences
+        val prefs = getSharedPreferences(PREFS_FILE, MODE_PRIVATE)
+        prefs.edit()
+            .putBoolean(KEY_BIOMETRICS_ENABLED, false)
+            .putBoolean(KEY_BIOMETRICS_ACTIVE, false)
+            .putBoolean(KEY_BIOMETRICS_NEEDS_RESTART, false)
+            .remove("pending_name_update")
+            .apply()
+        
+        // Show success message
+        Toast.makeText(this, getString(R.string.logged_out), Toast.LENGTH_SHORT).show()
+        
+        // Navigate to SignInActivity and clear activity stack
+        val intent = Intent(this, SignInActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 
 

@@ -32,16 +32,31 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Weight Input Section -->
-    <LinearLayout
-        android:id="@+id/weightSection"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:layout_marginTop="200dp"
-        android:orientation="vertical"
+    <!-- Scrollable content -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
         app:layout_constraintTop_toBottomOf="@id/tvTitle"
-        tools:layout_editor_absoluteX="16dp">
+        app:layout_constraintBottom_toTopOf="@id/bottomNav"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="16dp">
+
+            <!-- Weight Input Section -->
+            <LinearLayout
+                android:id="@+id/weightSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical">
 
         <TextView
             android:layout_width="wrap_content"
@@ -79,8 +94,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:orientation="vertical"
-        app:layout_constraintTop_toBottomOf="@id/weightSection">
+        android:orientation="vertical">
 
         <TextView
             android:layout_width="wrap_content"
@@ -118,8 +132,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:orientation="vertical"
-        app:layout_constraintTop_toBottomOf="@id/stepsSection">
+        android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -162,8 +175,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:orientation="vertical"
-        app:layout_constraintTop_toBottomOf="@id/buttonSection">
+        android:orientation="vertical">
 
         <TextView
             android:layout_width="wrap_content"
@@ -270,14 +282,18 @@
         </LinearLayout>
     </LinearLayout>
 
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
     <!-- NavigationBar -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNav"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="#ECE4FF"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:menu="@menu/bottom_nav_menu"
-        tools:layout_editor_absoluteX="0dp" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:menu="@menu/bottom_nav_menu" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

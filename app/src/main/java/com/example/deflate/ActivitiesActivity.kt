@@ -14,8 +14,10 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
+import com.example.deflate.repository.ActivityRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Date
 
 //-------------------------------------------------------------------------
@@ -33,14 +35,11 @@ class ActivitiesActivity : BaseActivity() {
 
     // Firestore
     private lateinit var auth: FirebaseAuth
-    private lateinit var db: FirebaseFirestore
+    private lateinit var activityRepository: ActivityRepository
 
     //-------------------------------------------------------------------------
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-
-
         enableEdgeToEdge()
         setContentView(R.layout.activity_activities)
 
@@ -52,11 +51,14 @@ class ActivitiesActivity : BaseActivity() {
 
         // Initialize Firebase
         auth = FirebaseAuth.getInstance()
-        db = FirebaseFirestore.getInstance()
+        activityRepository = ActivityRepository(this)
 
         initializeViews()
         setupClickListeners()
         loadCurrentActivities()
+        
+        // Sync activities
+        syncActivities()
     }
 
     private fun initializeViews() {
@@ -68,6 +70,35 @@ class ActivitiesActivity : BaseActivity() {
         tvCurrentSteps = findViewById(R.id.tvCurrentSteps)
         btnBack = findViewById(R.id.btnBack)
         bottomNav = findViewById(R.id.bottomNav)
+        
+        // Prevent EditText from losing focus when keyboard appears
+        etWeight.setOnFocusChangeListener { view, hasFocus ->
+            if (hasFocus) {
+                // Scroll to make sure the EditText is visible
+                view.post {
+                    try {
+                        val scrollView = findViewById<androidx.core.widget.NestedScrollView>(R.id.scrollView)
+                        scrollView?.smoothScrollTo(0, view.top)
+                    } catch (e: Exception) {
+                        Log.e("ActivitiesActivity", "Error scrolling to view", e)
+                    }
+                }
+            }
+        }
+        
+        etSteps.setOnFocusChangeListener { view, hasFocus ->
+            if (hasFocus) {
+                // Scroll to make sure the EditText is visible
+                view.post {
+                    try {
+                        val scrollView = findViewById<androidx.core.widget.NestedScrollView>(R.id.scrollView)
+                        scrollView?.smoothScrollTo(0, view.top)
+                    } catch (e: Exception) {
+                        Log.e("ActivitiesActivity", "Error scrolling to view", e)
+                    }
+                }
+            }
+        }
     }
 
     private fun setupClickListeners() {
@@ -83,32 +114,44 @@ class ActivitiesActivity : BaseActivity() {
             navigateToHome()
         }
 
-        // Bottom Navigation
+        // Bottom Navigation - only navigate if not currently on this screen
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_today -> {
-                    navigateToHome()
+                    if (this::class.java != HomeActivity::class.java) {
+                        navigateToHome()
+                    }
                     true
                 }
                 R.id.nav_diary -> {
-                    navigateToDiary()
+                    if (this::class.java != DiaryActivity::class.java) {
+                        navigateToDiary()
+                    }
                     true
                 }
                 R.id.nav_calendar -> {
-                    navigateToCalendar()
+                    if (this::class.java != CalendarActivity::class.java) {
+                        navigateToCalendar()
+                    }
                     true
                 }
                 R.id.nav_insights -> {
-                    navigateToInsights()
+                    if (this::class.java != InsightsActivity::class.java) {
+                        navigateToInsights()
+                    }
                     true
                 }
                 R.id.nav_settings -> {
-                    navigateToSettings()
+                    if (this::class.java != SettingsActivity::class.java) {
+                        navigateToSettings()
+                    }
                     true
                 }
                 else -> false
             }
         }
+        
+        // Don't set a selected item since Activities is accessed from Home, not from bottom nav
     }
 
     private fun resetInputs() {
@@ -162,28 +205,38 @@ class ActivitiesActivity : BaseActivity() {
             timestamp = System.currentTimeMillis()
         )
 
-        // Save to Firestore
-        db.collection("activities")
-            .add(activityData)
-            .addOnSuccessListener { documentReference ->
-                Log.d("ActivitiesActivity", "Document added with ID: ${documentReference.id}")
-
-                // Update UI
-                if (weight != null) {
-                    tvCurrentWeight.text = getString(R.string.weight_format, weight.toInt())
-                    etWeight.text.clear()
+        // Save to local database (will sync to Firestore when online)
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val result = activityRepository.saveActivity(activityData)
+                result.onSuccess {
+                    // Update UI
+                    if (weight != null) {
+                        tvCurrentWeight.text = getString(R.string.weight_format, weight)
+                        etWeight.text.clear()
+                    }
+                    if (steps != null) {
+                        tvCurrentSteps.text = getString(R.string.steps_format, steps)
+                        etSteps.text.clear()
+                    }
+                    Toast.makeText(this@ActivitiesActivity, getString(R.string.activities_saved_successfully), Toast.LENGTH_SHORT).show()
+                }.onFailure { e ->
+                    Log.e("ActivitiesActivity", "Error saving activity", e)
+                    Toast.makeText(this@ActivitiesActivity, "Saved locally. Will sync when online.", Toast.LENGTH_SHORT).show()
                 }
-                if (steps != null) {
-                    tvCurrentSteps.text = getString(R.string.steps_format, steps)
-                    etSteps.text.clear()
-                }
-
-                Toast.makeText(this, getString(R.string.activities_saved_successfully), Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Log.e("ActivitiesActivity", "Error in saveActivities", e)
+                Toast.makeText(this@ActivitiesActivity, "Error saving. Please try again.", Toast.LENGTH_SHORT).show()
             }
-            .addOnFailureListener { e ->
-                Log.e("ActivitiesActivity", "Error adding document", e)
-                Toast.makeText(this, getString(R.string.failed_to_save_activities, e.message), Toast.LENGTH_SHORT).show()
-            }
+        }
+    }
+    
+    private fun syncActivities() {
+        val user = auth.currentUser ?: return
+        CoroutineScope(Dispatchers.IO).launch {
+            activityRepository.syncFromFirestore(user.uid)
+            activityRepository.syncUnsyncedActivities(user.uid)
+        }
     }
 
     private fun loadCurrentActivities() {
@@ -196,79 +249,75 @@ class ActivitiesActivity : BaseActivity() {
             return
         }
 
-        // Get the latest weight entry - simplified query
-        db.collection("activities")
-            .whereEqualTo("userId", currentUser.uid)
-            .orderBy("timestamp", Query.Direction.DESCENDING)
-            .limit(10) // Get more documents to filter client-side
-            .get()
-            .addOnSuccessListener { documents ->
-                var latestWeight: Double? = null
-                for (document in documents) {
-                    val activityData = document.toObject(ActivityData::class.java)
-                    if (activityData.weight != null) {
-                        latestWeight = activityData.weight
-                        break // Found the latest weight entry
-                    }
+        // Get the latest weight and steps from local database
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val latestWeight = activityRepository.getLatestWeight(currentUser.uid)
+                val latestSteps = activityRepository.getLatestSteps(currentUser.uid)
+                
+                tvCurrentWeight.text = if (latestWeight?.weight != null) {
+                    getString(R.string.weight_format, latestWeight.weight)
+                } else {
+                    getString(R.string.weight_default)
                 }
-                tvCurrentWeight.text = if (latestWeight != null) getString(R.string.weight_format, latestWeight.toInt()) else getString(R.string.weight_default)
-            }
-            .addOnFailureListener { e ->
-                Log.e("ActivitiesActivity", getString(R.string.error_loading_weight_data), e)
+                
+                tvCurrentSteps.text = if (latestSteps?.steps != null) {
+                    getString(R.string.steps_format, latestSteps.steps)
+                } else {
+                    getString(R.string.steps_default)
+                }
+            } catch (e: Exception) {
+                Log.e("ActivitiesActivity", "Error loading activities", e)
+                // Set default values on error
                 tvCurrentWeight.text = getString(R.string.weight_default)
-            }
-
-        // Get the latest steps entry - simplified query
-        db.collection("activities")
-            .whereEqualTo("userId", currentUser.uid)
-            .orderBy("timestamp", Query.Direction.DESCENDING)
-            .limit(10) // Get more documents to filter client-side
-            .get()
-            .addOnSuccessListener { documents ->
-                var latestSteps: Int? = null
-                for (document in documents) {
-                    val activityData = document.toObject(ActivityData::class.java)
-                    if (activityData.steps != null) {
-                        latestSteps = activityData.steps
-                        break // Found the latest steps entry
-                    }
-                }
-                tvCurrentSteps.text = if (latestSteps != null) getString(R.string.steps_format, latestSteps) else getString(R.string.steps_default)
-            }
-            .addOnFailureListener { e ->
-                Log.e("ActivitiesActivity", getString(R.string.error_loading_steps_data), e)
                 tvCurrentSteps.text = getString(R.string.steps_default)
             }
+        }
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        syncActivities()
     }
 
     private fun navigateToHome() {
-        val intent = Intent(this, HomeActivity::class.java)
-        startActivity(intent)
-        finish()
+        if (this::class.java != HomeActivity::class.java) {
+            val intent = Intent(this, HomeActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
     }
 
     private fun navigateToDiary() {
-        val intent = Intent(this, DiaryActivity::class.java)
-        startActivity(intent)
-        finish()
+        if (this::class.java != DiaryActivity::class.java) {
+            val intent = Intent(this, DiaryActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
     }
 
     private fun navigateToCalendar() {
-        val intent = Intent(this, CalendarActivity::class.java)
-        startActivity(intent)
-        finish()
+        if (this::class.java != CalendarActivity::class.java) {
+            val intent = Intent(this, CalendarActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
     }
 
     private fun navigateToInsights() {
-        val intent = Intent(this, InsightsActivity::class.java)
-        startActivity(intent)
-        finish()
+        if (this::class.java != InsightsActivity::class.java) {
+            val intent = Intent(this, InsightsActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
     }
 
     private fun navigateToSettings() {
-        val intent = Intent(this, SettingsActivity::class.java)
-        startActivity(intent)
-        finish()
+        if (this::class.java != SettingsActivity::class.java) {
+            val intent = Intent(this, SettingsActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
     }
 }
 // --------------------------------------------<<< End of File >>>------------------------------------------
