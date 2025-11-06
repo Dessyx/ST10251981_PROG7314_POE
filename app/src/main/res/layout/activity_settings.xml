@@ -31,7 +31,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Settings"
+                android:text="@string/settings"
                 android:textSize="22sp"
                 android:textStyle="bold"
                 android:textColor="@android:color/black"
@@ -66,18 +66,19 @@
                 android:textStyle="bold"
                 android:textColor="@android:color/black"
                 android:layout_marginTop="16dp" />
-            <com.google.android.material.switchmaterial.SwitchMaterial
-                android:id="@+id/switchLanguage"
+            <com.example.deflate.LanguageToggleView
+                android:id="@+id/languageToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="English / Afrikaans"
-                android:layout_marginTop="8dp"/>
+                android:layout_marginTop="8dp"
+                android:layout_gravity="start" />
+
 
             <!-- Notifications -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Notifications"
+                android:text="@string/notifications"
                 android:textStyle="bold"
                 android:textColor="@android:color/black"
                 android:layout_marginTop="12dp" />
@@ -94,7 +95,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Biometrics"
+                android:text="@string/biometrics"
                 android:textStyle="bold"
                 android:textColor="@android:color/black"
                 android:layout_marginTop="12dp" />
@@ -112,7 +113,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Reminder frequency"
+                android:text="@string/reminder_frequency"
                 android:textStyle="bold"
                 android:textColor="@android:color/black"
                 android:layout_marginTop="12dp" />
@@ -144,7 +145,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Edit"
+                        android:text="@string/edit"
                         android:textStyle="bold"
                         android:textSize="16sp"
                         android:textColor="@android:color/black"
@@ -162,7 +163,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Name:"
+                        android:text="@string/name"
                         android:textStyle="bold"
                         android:textColor="@android:color/black"
                         android:layout_marginTop="8dp" />
@@ -181,7 +182,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Password:"
+                        android:text="@string/password"
                         android:textStyle="bold"
                         android:textColor="@android:color/black"
                         android:layout_marginTop="12dp" />
@@ -201,7 +202,7 @@
                         android:id="@+id/btnSave"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Save"
+                        android:text="@string/save"
                         android:textColor="@android:color/black"
                         android:backgroundTint="#9AFF9A"
                         android:layout_marginTop="16dp" />

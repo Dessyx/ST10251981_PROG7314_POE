@@ -48,7 +48,7 @@
                 android:id="@+id/entryType"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Diary Entry"
+                android:text="@string/diary_entry"
                 android:textColor="@color/black"
                 android:textSize="16sp"
                 android:textStyle="bold" />

@@ -35,12 +35,15 @@ class SettingsActivity : BaseActivity() {
         private const val KEY_BIOMETRICS_ENABLED = "biometrics_enabled"
         private const val KEY_BIOMETRICS_ACTIVE = "biometrics_active"
         private const val KEY_BIOMETRICS_NEEDS_RESTART = "biometrics_needs_restart"
+        private const val LANG_PREFS_FILE = "language_prefs"
+        private const val KEY_LANGUAGE_ENGLISH_SELECTED = "language_english_selected"
     }
 
     private lateinit var auth: FirebaseAuth
     private lateinit var tvUserName: TextView
+    private lateinit var languageToggle: LanguageToggleView
 
-    private lateinit var switchLanguage: SwitchMaterial
+
 
 
     //-------------------------------------------------------------------------
@@ -52,14 +55,32 @@ class SettingsActivity : BaseActivity() {
         setContentView(R.layout.activity_settings)
 
         // Initialize the switch
-        switchLanguage = findViewById(R.id.switchLanguage)
-        switchLanguage.isChecked = LocaleHelper.getLocale(this) == "af"
+        languageToggle = findViewById(R.id.languageToggle)
 
-        // Handle language toggle
-        switchLanguage.setOnCheckedChangeListener { _, isChecked ->
-            val newLang = if (isChecked) "af" else "en"
-            LocaleHelper.setLocale(this, newLang)  // Apply language
-            recreate()                              // Refresh this activity
+        // USE A SEPARATE PREFS FILE FOR LANGUAGE SETTINGS
+        // This avoids conflicts with other code that uses 'val prefs = getSharedPreferences(PREFS_FILE, ...)'
+        val langPrefs = getSharedPreferences(LANG_PREFS_FILE, MODE_PRIVATE)
+
+        // Determine initial language: prefer persisted user choice in language_prefs
+        val savedLangPref = langPrefs.getString(KEY_LANGUAGE_ENGLISH_SELECTED, null)
+        val currentLocale = LocaleHelper.getLocale(this) // returns "en" or "af" (expected)
+        val englishSelectedInitial = when {
+            savedLangPref != null -> savedLangPref.toBoolean() // persisted value takes precedence
+            else -> (currentLocale == "en") // fallback to LocaleHelper
+        }
+
+        // left = English, right = Afrikaans
+        languageToggle.setLeftSelected(englishSelectedInitial, animate = false)
+
+        // When toggled, set locale and persist choice into language_prefs
+        languageToggle.setOnSelectionChangedListener { leftSelected ->
+            val newLang = if (leftSelected) "en" else "af"
+            // Persist user choice into language_prefs (separate file)
+            langPrefs.edit().putString(KEY_LANGUAGE_ENGLISH_SELECTED, leftSelected.toString()).apply()
+
+            // Apply language immediately and recreate to update UI strings
+            LocaleHelper.setLocale(this, newLang)
+            recreate()
         }
 
 

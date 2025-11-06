@@ -99,7 +99,15 @@
     <string name="weight_format">%.1f kg</string>
     <string name="failed_to_save_activities">Kon nie aktiwiteite stoor nie</string>
     <string name="language_changed">Taal verander</string>
-
+    <string name="logout">Teken uit</string>
+    <string name="logout_confirmation">Is jy seker jy wil uitmeld?</string>
+    <string name="logged_out">Suksesvol afgemeld</string>
+    <string name="diary_entry">Diary Entry</string>
+    <string name="settings">Dagboekinskrywing</string>
+    <string name="notifications">Kennisgewings</string>
+    <string name="biometrics">Biometrie</string>
+    <string name="reminder_frequency">Herinnering frekwensie</string>
+    <string name="edit">Wysig</string>
 </resources>
 
 
