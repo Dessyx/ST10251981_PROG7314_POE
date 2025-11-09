@@ -17,6 +17,10 @@ class DeflateApplication : Application() {
         
         // Initialize SyncManager
         SyncManager.initialize(this)
+        
+        // Initialize notification system
+        NotificationHelper.createNotificationChannels(this)
+        NotificationScheduler.scheduleAllNotifications(this)
     }
 }
 

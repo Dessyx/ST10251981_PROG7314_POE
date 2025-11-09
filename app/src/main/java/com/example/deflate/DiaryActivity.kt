@@ -39,6 +39,10 @@ class DiaryActivity : BaseActivity() {
     // Firebase
     private lateinit var auth: FirebaseAuth
     private lateinit var diaryRepository: DiaryRepository
+    
+    // Notification managers
+    private lateinit var streakManager: StreakManager
+    private lateinit var moodAnalyzer: MoodAnalyzer
 
     // State
     private var selectedMood: String? = null
@@ -61,6 +65,8 @@ class DiaryActivity : BaseActivity() {
 
         auth = FirebaseAuth.getInstance()
         diaryRepository = DiaryRepository(this)
+        streakManager = StreakManager(this)
+        moodAnalyzer = MoodAnalyzer(this)
 
         initializeViews()
         setupClickListeners()
@@ -156,15 +162,47 @@ class DiaryActivity : BaseActivity() {
                 etEntry.text?.clear()
                 selectedMood = null
                 btnSave.isEnabled = true
+                
+                // Handle streak and mood notifications
+                handlePostSaveNotifications(user.uid)
             }.onFailure { e ->
                 Toast.makeText(this@DiaryActivity, "Entry saved locally. Will sync when online.", Toast.LENGTH_SHORT).show()
                 etEntry.text?.clear()
                 selectedMood = null
                 btnSave.isEnabled = true
+                
+                // Handle streak and mood notifications even for offline saves
+                handlePostSaveNotifications(user.uid)
             }
         }
     }
 
+    //-------------------------------------------------------------------------
+    // Handle notifications after saving entry
+    private fun handlePostSaveNotifications(userId: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // Update and check streak
+                val newStreak = streakManager.updateStreak(userId)
+                
+                // Show streak notification if it's a milestone
+                if (streakManager.shouldNotifyForStreak(newStreak)) {
+                    NotificationHelper.showStreakNotification(applicationContext, newStreak)
+                    streakManager.markStreakAsNotified(newStreak)
+                }
+                
+                // Check for crisis situation
+                val isInCrisis = moodAnalyzer.checkForCrisis(userId)
+                if (isInCrisis) {
+                    NotificationHelper.showCrisisNotification(applicationContext)
+                    moodAnalyzer.markCrisisNotificationSent()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+    
     // Navigation helpers
     private fun navigateToHome() {
         val intent = Intent(this, HomeActivity::class.java)

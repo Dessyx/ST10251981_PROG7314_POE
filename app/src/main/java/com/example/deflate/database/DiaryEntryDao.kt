@@ -11,6 +11,9 @@ interface DiaryEntryDao {
     @Query("SELECT * FROM diary_entries WHERE userId = :userId ORDER BY timestamp DESC")
     suspend fun getAllEntriesSync(userId: String): List<DiaryEntryEntity>
     
+    @Query("SELECT * FROM diary_entries WHERE userId = :userId AND datePretty LIKE :datePattern ORDER BY timestamp DESC")
+    suspend fun getEntriesForDate(userId: String, datePattern: String): List<DiaryEntryEntity>
+    
     @Query("SELECT * FROM diary_entries WHERE userId = :userId AND needsSync = 1")
     suspend fun getUnsyncedEntries(userId: String): List<DiaryEntryEntity>
     

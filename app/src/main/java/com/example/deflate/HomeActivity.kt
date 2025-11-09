@@ -190,6 +190,9 @@ class HomeActivity : BaseActivity() {
         }
 
         loadStreakData()
+        
+        // Request notification permission 
+        NotificationPermissionHelper.requestNotificationPermission(this)
 
         // Bottom navigation
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)
