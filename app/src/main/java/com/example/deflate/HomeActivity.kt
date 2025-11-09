@@ -154,7 +154,7 @@ class HomeActivity : BaseActivity() {
 
         //  Welcome text
         val tvWelcome = findViewById<TextView>(R.id.tvWelcome)
-        tvWelcome.text = "Welcome, $username"
+        tvWelcome.text = getString(R.string.welcome_user, username)
 
         //  Mood buttons
         val btnMoodHappy = findViewById<Button>(R.id.btnMoodHappy)
@@ -223,7 +223,8 @@ class HomeActivity : BaseActivity() {
 
         saveMoodEntryToFirestore(mood)
 
-        Toast.makeText(this, "Mood: $mood selected!", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.mood_selected_toast, mood), Toast.LENGTH_SHORT).show()
+
 
         currentMoodTags = moodToTagMap[mood] ?: listOf(mood.lowercase())
         currentTagIndex = 0
@@ -312,8 +313,8 @@ class HomeActivity : BaseActivity() {
             if (fallbackTags.isNotEmpty()) {
                 fetchQuote(fallbackTags[0])
             } else {
-                findViewById<TextView>(R.id.tvQuote).text =
-                    "No quotes found. Please try another mood!"
+                findViewById<TextView>(R.id.tvQuote).text = getString(R.string.no_quotes_found)
+
             }
         }
     }
@@ -405,8 +406,9 @@ class HomeActivity : BaseActivity() {
 
         Log.d("HomeActivity", "🔥 Updating streak UI: $currentStreak/$maxStreak days")
 
-        tvStreak?.text = "🔥 $currentStreak/$maxStreak days this week"
-        
+        tvStreak?.text = getString(R.string.streak_format, currentStreak, maxStreak)
+
+
         // Update progress bar
         progressStreak?.max = maxStreak
         progressStreak?.progress = currentStreak
@@ -414,13 +416,13 @@ class HomeActivity : BaseActivity() {
         val daysLeft = maxStreak - currentStreak
         when {
             currentStreak == 0 -> {
-                tvStreakMessage?.text = "Start your week by logging your mood or writing in your diary!"
+                tvStreakMessage?.text = getString(R.string.streak_start_prompt)
             }
             daysLeft > 0 -> {
                 tvStreakMessage?.text = "Log $daysLeft more days to complete this week! (Mood selection or diary entry)"
             }
             else -> {
-                tvStreakMessage?.text = "Amazing! You've logged all 7 days this week! 🎉"
+                tvStreakMessage?.text = getString(R.string.streak_complete, maxStreak)
             }
         }
     }
@@ -435,7 +437,8 @@ class HomeActivity : BaseActivity() {
         val username = pendingName ?: currentUser?.displayName ?: currentUser?.email?.substringBefore("@") ?: "User"
         
         val tvWelcome = findViewById<TextView>(R.id.tvWelcome)
-        tvWelcome?.text = "Welcome, $username"
+        tvWelcome?.text = getString(R.string.welcome_user, username)
+
     }
     
     override fun onResume() {
@@ -471,10 +474,10 @@ class HomeActivity : BaseActivity() {
             )
             
             result.onSuccess {
-                Toast.makeText(this@HomeActivity, "Mood saved!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@HomeActivity, getString(R.string.mood_saved_success), Toast.LENGTH_SHORT).show()
                 loadStreakData()
             }.onFailure { e ->
-                Toast.makeText(this@HomeActivity, "Mood saved locally. Will sync when online.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@HomeActivity, getString(R.string.mood_saved_offline), Toast.LENGTH_SHORT).show()
                 loadStreakData()
             }
         }

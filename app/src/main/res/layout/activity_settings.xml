@@ -142,7 +142,7 @@
                         android:layout_margin="2dp"
                         android:background="@drawable/selected_filter_bg"
                         android:gravity="center"
-                        android:text="Daily"
+                        android:text="@string/daily"
                         android:textColor="@color/black"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -155,7 +155,7 @@
                         android:layout_margin="2dp"
                         android:background="@drawable/unselected_filter_bg"
                         android:gravity="center"
-                        android:text="Weekly"
+                        android:text="@string/weekly"
                         android:textColor="@color/black"
                         android:textSize="14sp" />
 
@@ -167,7 +167,7 @@
                         android:layout_margin="2dp"
                         android:background="@drawable/unselected_filter_bg"
                         android:gravity="center"
-                        android:text="Monthly"
+                        android:text="@string/monthly"
                         android:textColor="@color/black"
                         android:textSize="14sp" />
                 </LinearLayout>
@@ -271,7 +271,7 @@
                 android:id="@+id/btnDeleteAccount"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Delete Account"
+                android:text="@string/delete_account"
                 android:textColor="@android:color/black"
                 android:backgroundTint="#FF7F7F"
                 android:layout_marginTop="12dp"

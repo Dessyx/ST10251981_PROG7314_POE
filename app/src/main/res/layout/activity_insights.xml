@@ -284,7 +284,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="Today's Entry Categories"
+        android:text="@string/today_category"
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="@color/black"
@@ -334,7 +334,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Mood"
+                android:text="@string/mood_text"
                 android:textColor="@color/black"
                 android:textSize="14sp" />
 
@@ -359,7 +359,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Activities"
+                android:text="@string/activities"
                 android:textColor="@color/black"
                 android:textSize="14sp" />
 
@@ -384,7 +384,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Weight"
+                android:text="@string/weight_text"
                 android:textColor="@color/black"
                 android:textSize="14sp" />
 
@@ -429,7 +429,7 @@
                 android:layout_margin="2dp"
                 android:background="@drawable/selected_filter_bg"
                 android:gravity="center"
-                android:text="Week"
+                android:text="@string/week"
                 android:textColor="@color/black"
                 android:textSize="14sp"
                 android:textStyle="bold" />
@@ -442,7 +442,7 @@
                 android:layout_margin="2dp"
                 android:background="@drawable/unselected_filter_bg"
                 android:gravity="center"
-                android:text="Month"
+                android:text="@string/month"
                 android:textColor="@color/black"
                 android:textSize="14sp" />
 
@@ -454,7 +454,7 @@
                 android:layout_margin="2dp"
                 android:background="@drawable/unselected_filter_bg"
                 android:gravity="center"
-                android:text="Year"
+                android:text="@string/year"
                 android:textColor="@color/black"
                 android:textSize="14sp" />
         </LinearLayout>
@@ -466,7 +466,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="Steps for the week"
+        android:text="@string/steps_week"
         android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="@color/black"
@@ -514,7 +514,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Total Steps: "
+                    android:text="@string/total_steps"
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="bold" />

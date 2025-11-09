@@ -64,7 +64,7 @@
             android:id="@+id/tvFilterLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Filter History"
+            android:text="@string/filter_history"
             android:textColor="@color/black"
             android:textSize="14sp"
             android:layout_marginEnd="4dp" />

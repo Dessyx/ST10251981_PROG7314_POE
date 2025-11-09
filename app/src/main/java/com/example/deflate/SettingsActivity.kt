@@ -146,8 +146,9 @@ class SettingsActivity : BaseActivity() {
                     
                     // Update UI immediately
                     tvUserName.text = newName
-                    Toast.makeText(this, "Name saved locally. Will sync when online.", Toast.LENGTH_SHORT).show()
-                    
+                    Toast.makeText(this, getString(R.string.name_saved_locally), Toast.LENGTH_SHORT).show()
+
+
                     // Try to sync to Firebase (if online)
                     syncNameToFirebase(newName, user.uid)
                 }
@@ -164,17 +165,13 @@ class SettingsActivity : BaseActivity() {
                     if (isOnline) {
                         user.updatePassword(newPass).addOnCompleteListener { passTask ->
                             if (passTask.isSuccessful) {
-                                Toast.makeText(this, "Password updated!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this, getString(R.string.password_updated_success), Toast.LENGTH_SHORT).show()
                             } else {
-                                Toast.makeText(
-                                    this,
-                                    "Failed to update password: ${passTask.exception?.message}",
-                                    Toast.LENGTH_LONG
-                                ).show()
+                                Toast.makeText(this, getString(R.string.password_update_failed, passTask.exception?.message ?: "" ), Toast.LENGTH_LONG).show()
                             }
                         }
                     } else {
-                        Toast.makeText(this, "Password update requires internet connection.", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, getString(R.string.password_update_requires_internet), Toast.LENGTH_LONG).show()
                     }
                 }
             }
@@ -196,20 +193,21 @@ class SettingsActivity : BaseActivity() {
         // Delete account
         btnDeleteAccount.setOnClickListener {
             androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("Delete Account")
-                .setMessage("⚠️ WARNING: This will permanently delete your account and ALL your data (diary entries, moods, activities, etc.). This action CANNOT be undone!\n\nAre you absolutely sure?")
-                .setPositiveButton("Yes, Delete Everything") { _, _ ->
+                .setTitle(getString(R.string.delete_account_title))
+                .setMessage(getString(R.string.delete_account_warning))
+                .setPositiveButton(getString(R.string.delete_account_confirm_yes_delete)) { _, _ ->
                     androidx.appcompat.app.AlertDialog.Builder(this)
-                        .setTitle("Final Confirmation")
-                        .setMessage("This is your last chance! Deleting your account is PERMANENT. Continue?")
-                        .setPositiveButton("DELETE ACCOUNT") { _, _ ->
+                        .setTitle(getString(R.string.final_confirmation_title))
+                        .setMessage(getString(R.string.final_confirmation_message))
+                        .setPositiveButton(getString(R.string.delete_account_button)) { _, _ ->
                             performAccountDeletion()
                         }
-                        .setNegativeButton("Cancel", null)
+                        .setNegativeButton(getString(R.string.Cancel_l), null)
                         .show()
                 }
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton(getString(R.string.Cancel_l), null)
                 .show()
+
         }
 
         // Reminder frequency button listeners
@@ -244,13 +242,13 @@ class SettingsActivity : BaseActivity() {
             
             if (checked) {
 
-                Toast.makeText(this, "Notifications enabled", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.notifications_enabled), Toast.LENGTH_SHORT).show()
 
                 val frequency = prefs.getString(KEY_REMINDER_FREQUENCY, "daily") ?: "daily"
                 updateNotificationSchedule(frequency)
             } else {
 
-                Toast.makeText(this, "Notifications disabled", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.notifications_disabled), Toast.LENGTH_SHORT).show()
 
                 NotificationScheduler.cancelAllNotifications(this)
             }
@@ -264,11 +262,7 @@ class SettingsActivity : BaseActivity() {
                     bm.canAuthenticate(androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG or androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK)
                 if (can != androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS) {
                     // show error and revert
-                    Toast.makeText(
-                        this,
-                        "Biometrics not available on this device",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(this, getString(R.string.biometrics_not_available), Toast.LENGTH_SHORT).show()
                     biometricToggle.setChecked(false, animate = true)
                     return@setOnCheckedChangeListener
                 }
@@ -278,18 +272,14 @@ class SettingsActivity : BaseActivity() {
                     .putBoolean("biometrics_active", false)
                     .putBoolean("biometrics_needs_restart", true)
                     .apply()
-                Toast.makeText(
-                    this,
-                    "Biometric enabled. Close and re-open the app for activation.",
-                    Toast.LENGTH_LONG
-                ).show()
+                Toast.makeText(this, getString(R.string.biometrics_enabled_message), Toast.LENGTH_LONG).show()
             } else {
                 prefs.edit()
                     .putBoolean("biometrics_enabled", false)
                     .putBoolean("biometrics_active", false)
                     .putBoolean("biometrics_needs_restart", false)
                     .apply()
-                Toast.makeText(this, "Biometric disabled.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.biometrics_disabled_message), Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -393,19 +383,15 @@ class SettingsActivity : BaseActivity() {
                     prefs.edit().clear().apply()
                     val homePrefs = getSharedPreferences("home_prefs", MODE_PRIVATE)
                     homePrefs.edit().clear().apply()
-                    
-                    Toast.makeText(this, "Account permanently deleted", Toast.LENGTH_LONG).show()
+
+                    Toast.makeText(this, getString(R.string.account_deleted_success), Toast.LENGTH_LONG).show()
                     val intent = Intent(this, MainActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     startActivity(intent)
                     finish()
                 } else {
                     val errorMessage = task.exception?.message ?: "Unknown error"
-                    Toast.makeText(
-                        this,
-                        "Failed to delete account: $errorMessage\n\nYou may need to re-authenticate first.",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    Toast.makeText(this, getString(R.string.account_delete_failed, errorMessage), Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -476,17 +462,17 @@ class SettingsActivity : BaseActivity() {
         when (frequency) {
             "daily" -> {
                 NotificationScheduler.scheduleAllNotifications(this)
-                Toast.makeText(this, "Daily reminders enabled", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.reminders_daily_enabled), Toast.LENGTH_SHORT).show()
             }
             "weekly" -> {
 
                 NotificationScheduler.scheduleWeeklyReminder(this)
-                Toast.makeText(this, "Weekly reminders enabled (Sunday 8 PM)", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.reminders_weekly_enabled), Toast.LENGTH_SHORT).show()
             }
             "monthly" -> {
 
                 NotificationScheduler.scheduleMonthlyReminder(this)
-                Toast.makeText(this, "Monthly reminders enabled (1st of month 8 PM)", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.reminders_monthly_enabled), Toast.LENGTH_SHORT).show()
             }
         }
     }

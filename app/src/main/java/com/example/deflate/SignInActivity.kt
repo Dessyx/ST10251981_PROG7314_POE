@@ -35,13 +35,9 @@ import androidx.core.view.isVisible
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 
-
-
-
 //-------------------------------------------------------------------------
 // Sign In screen activity
 class SignInActivity : BaseActivity() {
-
 
     companion object {
         private const val TAG = "SignInActivity"
@@ -53,11 +49,7 @@ class SignInActivity : BaseActivity() {
         private const val KEY_BIOMETRICS_ENABLED = "biometrics_enabled"
         private const val KEY_BIOMETRICS_ACTIVE = "biometrics_active"
         private const val KEY_BIOMETRICS_NEEDS_RESTART = "biometrics_needs_restart"
-
-
-
     }
-
 
     //  UI Elements
     private lateinit var usernameEditText: EditText
@@ -69,13 +61,10 @@ class SignInActivity : BaseActivity() {
     private lateinit var biometricSignInButton: MaterialButton
     private lateinit var btnBack: ImageView
 
-
     //  Firebase / SDKs
     private lateinit var auth: FirebaseAuth
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var callbackManager: CallbackManager
-
-
 
     //-------------------------------------------------------------------------
     //  Lifecycle
@@ -95,8 +84,6 @@ class SignInActivity : BaseActivity() {
         auth = FirebaseAuth.getInstance()
         configureGoogleSignIn()
 
-
-
         initViews()
         setupClickListeners()
 
@@ -104,14 +91,14 @@ class SignInActivity : BaseActivity() {
 
         // Check if biometric authentication is required
         val requireBiometricAuth = intent.getBooleanExtra("REQUIRE_BIOMETRIC_AUTH", false)
-        
+
         if (requireBiometricAuth) {
             val currentUser = auth.currentUser
             if (currentUser != null) {
 
                 val prefs = getSharedPreferences(PREFS_FILE, MODE_PRIVATE)
                 val biometricsActive = prefs.getBoolean(KEY_BIOMETRICS_ACTIVE, false)
-                
+
                 if (biometricsActive) {
 
                     android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
@@ -123,17 +110,15 @@ class SignInActivity : BaseActivity() {
                 }
             } else {
 
-                Toast.makeText(this, "Please sign in to continue", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.please_sign_in_to_continue), Toast.LENGTH_SHORT).show()
             }
             return
         }
-        
 
         val currentUser = auth.currentUser
         if (currentUser != null) {
             val prefs = getSharedPreferences(PREFS_FILE, MODE_PRIVATE)
             val biometricsActive = prefs.getBoolean(KEY_BIOMETRICS_ACTIVE, false)
-            
 
             if (!biometricsActive) {
                 handleSignInSuccess()
@@ -141,7 +126,6 @@ class SignInActivity : BaseActivity() {
             }
         }
     }
-
 
     //-------------------------------------------------------------------------
     // Setup
@@ -163,7 +147,6 @@ class SignInActivity : BaseActivity() {
         btnBack.setOnClickListener { navigateToSignUp() }
     }
 
-
     //-------------------------------------------------------------------------
     //  Email/Password Authentication
     private fun handleSignIn() {
@@ -172,14 +155,13 @@ class SignInActivity : BaseActivity() {
 
         if (!validateInputs(input, password)) return
 
-      
         if (!isNetworkAvailable()) {
-            showError("Authentication requires internet connection. If you're already logged in, the app will work offline. Please connect to the internet to sign in or create an account.")
+            showError(getString(R.string.auth_requires_internet))
             return
         }
 
         signinButton.isEnabled = false
-        signinButton.text = "Signing in..."
+        signinButton.text = getString(R.string.signing_in)
 
         if (input.contains("@")) {
             // User entered an email
@@ -196,31 +178,31 @@ class SignInActivity : BaseActivity() {
                         if (!email.isNullOrEmpty()) {
                             signInWithEmail(email, password)
                         } else {
-                            showError("No email linked to this username")
+                            showError(getString(R.string.no_email_linked_to_username))
                         }
                     } else {
-                        showError("Username not found")
+                        showError(getString(R.string.username_not_found))
                     }
                 }
                 .addOnFailureListener { e ->
-                    showError("Error: ${e.message}")
-                 }
+                    showError(getString(R.string.generic_error_with_detail, e.message ?: ""))
+                }
         }
     }
-    
+
     private fun isNetworkAvailable(): Boolean {
         val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-               capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
 
     private fun signInWithEmail(email: String, password: String) {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 signinButton.isEnabled = true
-                signinButton.text = "Sign In"
+                signinButton.text = getString(R.string.sign_in)
 
                 if (task.isSuccessful) {
                     handleSignInSuccess()
@@ -229,25 +211,25 @@ class SignInActivity : BaseActivity() {
                     val errorMessage = when {
                         exception is FirebaseAuthException -> {
                             when (exception.errorCode) {
-                                "ERROR_NETWORK_REQUEST_FAILED" -> "Network error. Please check your internet connection."
-                                "ERROR_INTERNAL_ERROR" -> "Internal error. Please try again later."
-                                "ERROR_INVALID_EMAIL" -> "Invalid email address."
-                                "ERROR_WRONG_PASSWORD" -> "Incorrect password."
-                                "ERROR_USER_NOT_FOUND" -> "User not found."
-                                "ERROR_USER_DISABLED" -> "This account has been disabled."
-                                "ERROR_TOO_MANY_REQUESTS" -> "Too many failed attempts. Please try again later."
-                                else -> "Login failed: ${exception.errorCode}"
+                                "ERROR_NETWORK_REQUEST_FAILED" -> getString(R.string.network_error_check_connection)
+                                "ERROR_INTERNAL_ERROR" -> getString(R.string.internal_error_try_again)
+                                "ERROR_INVALID_EMAIL" -> getString(R.string.invalid_email_address)
+                                "ERROR_WRONG_PASSWORD" -> getString(R.string.incorrect_password)
+                                "ERROR_USER_NOT_FOUND" -> getString(R.string.user_not_found)
+                                "ERROR_USER_DISABLED" -> getString(R.string.account_disabled)
+                                "ERROR_TOO_MANY_REQUESTS" -> getString(R.string.too_many_attempts)
+                                else -> getString(R.string.login_failed_with_code, exception.errorCode)
                             }
                         }
                         else -> {
-                            val errorMsg = exception?.message ?: "Unknown error"
+                            val errorMsg = exception?.message ?: getString(R.string.unknown_error)
                             if (errorMsg.contains("network", ignoreCase = true) ||
                                 errorMsg.contains("internet", ignoreCase = true) ||
                                 errorMsg.contains("connection", ignoreCase = true) ||
                                 errorMsg.contains("timeout", ignoreCase = true)) {
-                                "No internet connection. Please check your network and try again."
+                                getString(R.string.no_internet_connection_try_again)
                             } else {
-                                "Login failed: $errorMsg"
+                                getString(R.string.login_failed_with_detail, errorMsg)
                             }
                         }
                     }
@@ -258,32 +240,31 @@ class SignInActivity : BaseActivity() {
 
     private fun showError(msg: String) {
         signinButton.isEnabled = true
-        signinButton.text = "Sign In"
+        signinButton.text = getString(R.string.sign_in)
         Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
     }
 
     private fun validateInputs(username: String, password: String): Boolean {
         var isValid = true
         if (TextUtils.isEmpty(username)) {
-            usernameEditText.error = "Username is required"
+            usernameEditText.error = getString(R.string.username_required)
             usernameEditText.requestFocus()
             isValid = false
         }
         if (TextUtils.isEmpty(password)) {
-            passwordEditText.error = "Password is required"
+            passwordEditText.error = getString(R.string.password_required)
             if (isValid) passwordEditText.requestFocus()
             isValid = false
         }
         return isValid
     }
 
-
     //  Authenticate Result Handlers
     private fun handleSignInSuccess() {
-        Toast.makeText(this, "Sign in successful!", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, getString(R.string.sign_in_successful), Toast.LENGTH_LONG).show()
         signinButton.isEnabled = true
-        signinButton.text = "Sign In"
-        
+        signinButton.text = getString(R.string.sign_in)
+
         // Fetch and save user name to SharedPreferences, THEN navigate
         val currentUser = auth.currentUser
         if (currentUser != null) {
@@ -295,7 +276,7 @@ class SignInActivity : BaseActivity() {
             navigateToHome()
         }
     }
-    
+
     private fun fetchAndSaveUserName(userId: String, onComplete: () -> Unit) {
         val db = FirebaseFirestore.getInstance()
         db.collection("users")
@@ -307,7 +288,6 @@ class SignInActivity : BaseActivity() {
                     // Save to SharedPreferences
                     val prefs = getSharedPreferences(PREFS_FILE, MODE_PRIVATE)
                     prefs.edit().putString("pending_name_update", name).apply()
-                    
 
                     val currentUser = auth.currentUser
                     if (currentUser?.displayName.isNullOrEmpty()) {
@@ -317,12 +297,10 @@ class SignInActivity : BaseActivity() {
                         currentUser?.updateProfile(profileUpdates)
                     }
                 }
-
                 onComplete()
             }
             .addOnFailureListener { e ->
                 Log.e(TAG, "Failed to fetch user name", e)
-
                 onComplete()
             }
     }
@@ -330,7 +308,7 @@ class SignInActivity : BaseActivity() {
     private fun handleSignInError(errorMessage: String) {
         Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
         signinButton.isEnabled = true
-        signinButton.text = "Sign In"
+        signinButton.text = getString(R.string.sign_in)
     }
 
     private fun navigateToSignUp() {
@@ -342,7 +320,6 @@ class SignInActivity : BaseActivity() {
         startActivity(Intent(this, HomeActivity::class.java))
         finish()
     }
-
 
     //-------------------------------------------------------------------------
     //  Google Authentication
@@ -362,7 +339,7 @@ class SignInActivity : BaseActivity() {
 
     private fun signInWithGoogle() {
         if (!isNetworkAvailable()) {
-            Toast.makeText(this, "No internet connection. Please check your network and try again.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.no_internet_connection_try_again), Toast.LENGTH_LONG).show()
             return
         }
         val signInIntent = googleSignInClient.signInIntent
@@ -371,7 +348,12 @@ class SignInActivity : BaseActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        callbackManager.onActivityResult(requestCode, resultCode, data)
+        try {
+            // callbackManager may be null if not initialized - safe call if used
+            if (::callbackManager.isInitialized) callbackManager.onActivityResult(requestCode, resultCode, data)
+        } catch (e: Exception) {
+            Log.w(TAG, "CallbackManager not initialized or error calling it", e)
+        }
 
         if (requestCode == RC_SIGN_IN) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
@@ -381,10 +363,10 @@ class SignInActivity : BaseActivity() {
             } catch (e: ApiException) {
                 Log.e(TAG, "Google Sign-In failed: ${e.statusCode} - ${e.message}")
                 val errorMessage = when (e.statusCode) {
-                    10 -> "DEVELOPER_ERROR: Check SHA-1 fingerprint and OAuth configuration"
-                    7 -> "NETWORK_ERROR: Check internet connection"
-                    12501 -> "USER_CANCELLED: Sign-in was cancelled"
-                    else -> "Google Sign-In failed: ${e.statusCode} - ${e.message}"
+                    10 -> getString(R.string.dev_error_check_sha)
+                    7 -> getString(R.string.network_error_check_connection)
+                    12501 -> getString(R.string.user_cancelled)
+                    else -> getString(R.string.google_signin_failed_with_code, e.statusCode, e.message ?: "")
                 }
                 Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
             }
@@ -394,10 +376,10 @@ class SignInActivity : BaseActivity() {
                 if (authCode != null) {
                     handleGitHubCallback(authCode)
                 } else {
-                    Toast.makeText(this, "GitHub authentication failed", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, getString(R.string.github_auth_failed), Toast.LENGTH_SHORT).show()
                 }
             } else {
-                Toast.makeText(this, "GitHub authentication cancelled", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.github_auth_cancelled), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -410,14 +392,15 @@ class SignInActivity : BaseActivity() {
                     val user = auth.currentUser
                     handleGoogleSignInSuccess(user)
                 } else {
-                    Toast.makeText(this, "Authentication failed. Please try again.", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, getString(R.string.auth_failed_try_again), Toast.LENGTH_LONG).show()
                 }
             }
     }
 
     private fun handleGoogleSignInSuccess(user: FirebaseUser?) {
         user?.let {
-            Toast.makeText(this, "Welcome ${it.displayName ?: "User"}!", Toast.LENGTH_LONG).show()
+            val displayName = it.displayName ?: getString(R.string.user_default)
+            Toast.makeText(this, getString(R.string.welcome_user, displayName), Toast.LENGTH_LONG).show()
             navigateToHome()
         }
     }
@@ -426,33 +409,29 @@ class SignInActivity : BaseActivity() {
     // GitHub Authentication
     private fun signInWithGitHub() {
         if (GITHUB_CLIENT_ID == "YOUR_GITHUB_CLIENT_ID") {
-            Toast.makeText(this, "GitHub Client ID not configured.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.github_client_id_not_configured), Toast.LENGTH_LONG).show()
             return
         }
-        
+
         if (!isNetworkAvailable()) {
-            Toast.makeText(this, "No internet connection. Please check your network and try again.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.no_internet_connection_try_again), Toast.LENGTH_LONG).show()
             return
         }
-        
+
         val intent = Intent(this, GitHubAuthActivity::class.java)
         startActivityForResult(intent, RC_GITHUB_AUTH)
     }
 
-
     private fun handleGitHubCallback(code: String) {
         Log.d(TAG, "GitHub authentication code received: $code")
-        
+
         // Show loading state
-        Toast.makeText(this, "Authenticating with GitHub...", Toast.LENGTH_SHORT).show()
-        
+        Toast.makeText(this, getString(R.string.authenticating_with_github), Toast.LENGTH_SHORT).show()
+
         // For now, we'll create a custom user session for GitHub users
-        // In a real implementation, you'd exchange the code for an access token
-        // and then create a custom Firebase token
-        
         val githubEmail = "github_user_${System.currentTimeMillis()}@github.com"
         val githubPassword = "github_temp_password_${System.currentTimeMillis()}"
-        
+
         // Create a temporary user account for GitHub authentication
         auth.createUserWithEmailAndPassword(githubEmail, githubPassword)
             .addOnCompleteListener(this) { task ->
@@ -470,26 +449,26 @@ class SignInActivity : BaseActivity() {
                                 handleGitHubSignInSuccess(user, code)
                             } else {
                                 Log.e(TAG, "GitHub authentication failed", signInTask.exception)
-                                Toast.makeText(this, "GitHub authentication failed: ${signInTask.exception?.message}", Toast.LENGTH_LONG).show()
+                                Toast.makeText(this, getString(R.string.github_auth_failed_with_detail, signInTask.exception?.message ?: ""), Toast.LENGTH_LONG).show()
                             }
                         }
                 }
             }
     }
-    
+
     private fun handleGitHubSignInSuccess(user: FirebaseUser?, githubCode: String) {
         user?.let {
-            val displayName = "GitHub User"
+            val displayName = getString(R.string.github_user_display_name)
             val email = it.email ?: ""
-            
+
             // Save user data to Firestore
             saveGitHubUserDataToFirestore(it.uid, displayName, email, githubCode)
-            
-            Toast.makeText(this, "Welcome! GitHub authentication successful", Toast.LENGTH_LONG).show()
+
+            Toast.makeText(this, getString(R.string.github_auth_successful), Toast.LENGTH_LONG).show()
             navigateToHome()
         }
     }
-    
+
     private fun saveGitHubUserDataToFirestore(uid: String, displayName: String, email: String, githubCode: String) {
         val db = FirebaseFirestore.getInstance()
         val userData = hashMapOf(
@@ -514,10 +493,9 @@ class SignInActivity : BaseActivity() {
             }
             .addOnFailureListener { exception ->
                 Log.e(TAG, "Failed to save GitHub user data to Firestore", exception)
-
             }
-
     }
+
     //-------------------------------------------------------------------------
     // Biometric Authentication
     private fun onBiometricButtonClicked() {
@@ -527,11 +505,10 @@ class SignInActivity : BaseActivity() {
 
         when {
             !enabled -> {
-
                 AlertDialog.Builder(this)
-                    .setTitle("Enable biometrics in Settings")
-                    .setMessage("To use biometric sign in, first sign in with your account, then open Settings and enable Biometrics (toggle). After enabling, close and re-open the app for the feature to activate.")
-                    .setPositiveButton("OK", null)
+                    .setTitle(getString(R.string.enable_biometrics_title))
+                    .setMessage(getString(R.string.enable_biometrics_message))
+                    .setPositiveButton(getString(R.string.ok), null)
                     .show()
                 return
             }
@@ -566,22 +543,22 @@ class SignInActivity : BaseActivity() {
             override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                 super.onAuthenticationError(errorCode, errString)
                 runOnUiThread {
-                    Toast.makeText(this@SignInActivity, "Authentication error: $errString", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@SignInActivity, getString(R.string.authentication_error_with_detail, errString.toString()), Toast.LENGTH_SHORT).show()
                 }
             }
 
             override fun onAuthenticationFailed() {
                 super.onAuthenticationFailed()
                 runOnUiThread {
-                    Toast.makeText(this@SignInActivity, "Authentication failed", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@SignInActivity, getString(R.string.authentication_failed), Toast.LENGTH_SHORT).show()
                 }
             }
         })
 
         val info = BiometricPrompt.PromptInfo.Builder()
-            .setTitle("Unlock with biometrics")
-            .setSubtitle("Use your fingerprint or face to access the app")
-            .setNegativeButtonText("Cancel")
+            .setTitle(getString(R.string.unlock_with_biometrics_title))
+            .setSubtitle(getString(R.string.unlock_with_biometrics_subtitle))
+            .setNegativeButtonText(getString(R.string.cancel))
             .setAllowedAuthenticators(
                 androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG or
                         androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
@@ -591,9 +568,10 @@ class SignInActivity : BaseActivity() {
         // Launch prompt
         prompt.authenticate(info)
     }
+
     private fun handleBiometricSuccess() {
-        Toast.makeText(this, "Biometric authentication successful ", Toast.LENGTH_SHORT).show()
-        
+        Toast.makeText(this, getString(R.string.biometric_auth_successful), Toast.LENGTH_SHORT).show()
+
         // For biometric auth, check if we have a cached user session
         val currentUser = auth.currentUser
         if (currentUser != null) {
@@ -602,15 +580,13 @@ class SignInActivity : BaseActivity() {
         } else {
             // No cached session, need internet for first-time biometric auth
             if (!isNetworkAvailable()) {
-                Toast.makeText(this, "No internet connection. First-time biometric authentication requires internet.", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, getString(R.string.no_internet_first_time_biometrics), Toast.LENGTH_LONG).show()
             } else {
                 // This shouldn't happen, but handle it gracefully
-                Toast.makeText(this, "Please sign in with email/password first to enable biometric authentication.", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, getString(R.string.sign_in_first_to_enable_biometrics), Toast.LENGTH_LONG).show()
             }
         }
     }
-
 }
-
 
 // --------------------------------------------<<< End of File >>>------------------------------------------

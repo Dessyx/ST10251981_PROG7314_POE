@@ -344,11 +344,13 @@ class InsightsActivity : BaseActivity() {
                 
                 val maxEntries = 30
                 streakFragment.updateStreakData(consecutiveDays, maxEntries)
-                streakFragment.updateTitle("Diary entry streak")
+                streakFragment.updateTitle(getString(R.string.diary_entry_streak_title))
+
             } catch (e: Exception) {
                 Log.e("InsightsActivity", "Error loading diary streak", e)
                 streakFragment.updateStreakData(0, 30)
-                streakFragment.updateTitle("Diary entry streak")
+                streakFragment.updateTitle(getString(R.string.diary_entry_streak_title))
+
             }
         }
     }
@@ -656,8 +658,9 @@ class InsightsActivity : BaseActivity() {
                     
                     val weekOfYear = calendar.get(Calendar.WEEK_OF_YEAR)
                     val weekNumber = currentWeek - weekOfYear + 1
-                    val weekKey = "Week ${weekNumber}"
-                    
+                    val weekKey = getString(R.string.week_of_number, weekNumber)
+
+
                     if (steps > 0) {
                         processedData[weekKey] = (processedData[weekKey] ?: 0) + steps
                     }
@@ -693,21 +696,21 @@ class InsightsActivity : BaseActivity() {
     
     private fun updateStepsTitle() {
         val title = when (currentTimeFilter) {
-            "week" -> "Steps for the week"
-            "month" -> "Steps for the month"
-            "year" -> "Steps for the year"
-            else -> "Steps for the week"
+            "week" -> getString(R.string.steps_for_week)
+            "month" -> getString(R.string.steps_for_month)
+            "year" -> getString(R.string.steps_for_year)
+            else -> getString(R.string.steps_for_week)
         }
         tvStepsTitle.text = title
     }
     
     private fun updateEntryCategoriesTitle() {
         val title = when (currentFilter) {
-            "day" -> "Today's Entry Categories"
-            "week" -> "This Week's Entry Categories"
-            "month" -> "This Month's Entry Categories"
-            "custom" -> "Custom Date Range Entry Categories"
-            else -> "Today's Entry Categories"
+            "day" -> getString(R.string.entry_categories_today)
+            "week" -> getString(R.string.entry_categories_week)
+            "month" -> getString(R.string.entry_categories_month)
+            "custom" -> getString(R.string.entry_categories_custom)
+            else -> getString(R.string.entry_categories_today)
         }
         tvEntryCategoriesTitle.text = title
     }

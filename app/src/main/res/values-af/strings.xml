@@ -24,7 +24,7 @@
     <string name="github_authentication">GitHub-verifikasie</string>
     <string name="close">Sluit</string>
     <string name="history_screen">Geskiedenis Skerm</string>
-    <string name="welcome_user">Welkom, Gebruiker</string>
+
     <string name="today_date">Dinsdag, 11 September</string>
     <string name="how_feeling_today">Hoe voel jy vandag?</string>
     <string name="deflate_diary">+ Ontlont in Dagboek</string>
@@ -108,6 +108,190 @@
     <string name="biometrics">Biometrie</string>
     <string name="reminder_frequency">Herinnering frekwensie</string>
     <string name="edit">Wysig</string>
+    <string name="welcome_user">Welkom, %1$s</string>
+    <string name="mood_selected_toast">Gemoed: %1$s gekies!</string>
+    <string name="no_quotes_found">Geen aanhalings gevind nie. Probeer asseblief \'n ander gemoed!</string>
+    <string name="streak_format">🔥 %1$d/%2$d dae hierdie week</string>
+    <string name="streak_start_prompt">Begin jou week deur jou gemoed aan te teken of in jou dagboek te skryf!</string>
+    <string name="streak_complete">Wonderlik! Jy het al %1$d dae hierdie week aangeteken! 🎉</string>
+    <string name="mood_saved_success">Gemoed gestoor!</string>
+    <string name="mood_saved_offline">Gemoed plaaslik gestoor. Sal sinchroniseer wanneer aanlyn.</string>
+    <string name="date_format_long">EEEE, MMMM dd</string>
+    <string name="today_category">Vandag se inskrywingskategorieë</string>
+    <string name="mood_text">Gemoedstoestand</string>
+    <string name="steps_week">Stappe vir die week</string>
+    <string name="total_steps">Totale stappe:</string>
+    <string name="week">Week</string>
+    <string name="year">Jaar</string>
+    <string name="month">Maand</string>
+    <string name="weight_text">Gewig</string>
+    <string name="daily">Daagliks</string>
+    <string name="weekly">Weekliks</string>
+    <string name="monthly">Maandeliks</string>
+    <string name="filter_history">Filtreer Geskiedsettingsenis</string>
+    <string name="please_sign_in_to_view_insights">Teken asseblief aan om insigte te sien</string>
+    <string name="zero_value">0</string>
+    <string name="diary_entry_streak_title">Dagboekinskrywingsreeks</string>
+    <string name="week_of_number">Week %1$d</string>
+    <string name="steps_for_week">Stappe vir die week</string>
+    <string name="steps_for_month">Stappe vir die maand</string>
+    <string name="steps_for_year">Stappe vir die jaar</string>
+    <string name="entry_categories_today">Vandag se inskrywingskategorieë</string>
+    <string name="entry_categories_week">Hierdie week se inskrywingskategorieë</string>
+    <string name="entry_categories_month">Hierdie maand se inskrywingskategorieë</string>
+    <string name="entry_categories_custom">Inskrywingskategorieë vir pasgemaakte datumbereik</string>
+    <string name="no_data_available">Geen data beskikbaar nie</string>
+    <string name="delete_account">Vee rekening uit</string>
+    <string name="diary_ntry">Dagboekinskrywing</string>
+    <string name="mood_happy_label">Bly</string>
+    <string name="mood_sad_label">Hartseer</string>
+    <string name="mood_anxious_label">Angstig</string>
+    <string name="mood_tired_label">Moeg</string>
+    <string name="mood_excited_label">Opgewonde</string>
+    <string name="mood_content_label">Tevrede</string>
+    <string name="mood_unknown_label">Gemoed</string>
+    <string name="name_saved_locally">Naam plaaslik gestoor. Sal sinchroniseer wanneer aanlyn.</string>
+
+    <string name="password_updated_success">Wagwoord opgedateer!</string>
+    <string name="password_update_failed">Kon nie wagwoord opdateer nie: %1$s</string>
+    <string name="password_update_requires_internet">Wagwoord opdatering vereis internetverbinding.</string>
+
+    <string name="delete_account_title">Verwyder Rekening</string>
+    <string name="delete_account_warning">⚠️ WAARSKUWING: Dit sal jou rekening en AL jou data (dagboekinskrywings, gemoedstate, aktiwiteite, ens.) permanent verwyder. Hierdie aksie KAN NIE ongedaan gemaak word nie!\n\nIs jy heeltemal seker?</string>
+    <string name="delete_account_confirm_yes_delete">Ja, Verwyder Alles</string>
+    <string name="final_confirmation_title">Finale Bevestiging</string>
+    <string name="final_confirmation_message">Dit is jou laaste kans! Om jou rekening te verwyder is PERMANENT. Gaan voort?</string>
+    <string name="delete_account_button">VERWYDER REKENING</string>
+    <string name="Cancel_l">Kanselleer</string>
+
+    <string name="notifications_enabled">Kennisgewings geaktiveer</string>
+    <string name="notifications_disabled">Kennisgewings gedeaktiveer</string>
+
+    <string name="biometrics_not_available">Biometrie beskikbaar nie op hierdie toestel nie</string>
+    <string name="biometrics_enabled_message">Biometrie geaktiveer. Maak die app toe en heropen vir aktivering.</string>
+    <string name="biometrics_disabled_message">Biometrie gedeaktiveer.</string>
+
+    <string name="reminders_daily_enabled">Daaglikse herinneringe geaktiveer</string>
+    <string name="reminders_weekly_enabled">Weeklikse herinneringe geaktiveer (Sondag 20:00)</string>
+    <string name="reminders_monthly_enabled">Maandelikse herinneringe geaktiveer (1ste van die maand 20:00)</string>
+
+    <string name="account_deleted_success">Rekening permanent verwyder</string>
+    <string name="account_delete_failed">Kon nie rekening verwyder nie: %1$s\n\nJy moet dalk eers weer verifieer.</string>
+
+    <string name="user_default">Gebruiker</string>
+    <string name="channel_diary_title">Dagboekherinnerings</string>
+    <string name="channel_diary_description">Daaglikse herinneringe om jou gevoelens aan te teken</string>
+
+    <string name="channel_streak_title">Reeks Opdaterings</string>
+    <string name="channel_streak_description">Kennisgewings oor jou vordering en mylpale</string>
+
+    <string name="channel_crisis_title">Krisisondersteuning</string>
+    <string name="channel_crisis_description">Belangrike ondersteunings- en noodhulplyn inligting</string>
+
+    <!-- Diary reminder notification -->
+    <string name="diary_notif_title">Tyd om in te teken</string>
+    <string name="diary_notif_text">Hoe voel jy vandag? Neem \'n oomblik om oor jou gevoelens te skryf.</string>
+
+    <!-- Crisis notification -->
+    <string name="crisis_title">Ondersteuning beskikbaar</string>
+    <string name="crisis_text">Ons het opgemerk dat jy swakker voel. Hulp is hier vir jou.</string>
+    <string name="crisis_message_detail">Ons het opgemerk dat jy onlangs swaar voel. Jy is nie alleen nie, en hulp is beskikbaar.\n\nNoodhulplyne:\n🇺🇸 National Suicide Prevention Lifeline: 988\n🇬🇧 Samaritans: 116 123\n🇿🇦 SADAG: 0800 567 567\n🌍 Internasionaal: findahelpline.com\n\nSkakel asseblief uit as jy ondersteuning nodig het.</string>
+
+    <!-- Streak messages for specific milestones -->
+    <string name="streak_title_1">Goeie begin! 🌱</string>
+    <string name="streak_msg_1">Jy het jou reis begin! Bly daagliks jou gevoelens aan te teken om jou reeks op te bou.</string>
+
+    <string name="streak_title_3">3-dae Reeks! 🔥</string>
+    <string name="streak_msg_3">Fantasties! Jy bou \'n gesonde gewoonte. Drie dae van konsekwente selfrefleksie!</string>
+
+    <string name="streak_title_7">Weekreeks! 🎉</string>
+    <string name="streak_msg_7">Baie geluk! Jy het \'n hele week lank by jouself ingeteken. Dit wys toewyding!</string>
+
+    <string name="streak_title_14">2-weke Reeks! ⭐</string>
+    <string name="streak_msg_14">Ongelooflik! Twee weke van konsekwente selfversorging. Jy doen uitstekend!</string>
+
+    <string name="streak_title_30">30-dae Mylpaal! 🏆</string>
+    <string name="streak_msg_30">Uitstaande prestasie! \'n Hele maand van refleksie en groei. Wees trots!</string>
+
+    <string name="streak_title_60">60-dae Mylpaal! 💎</string>
+    <string name="streak_msg_60">Twee maande se toewyding! Jy het selfrefleksie \'n werklike gewoonte gemaak.</string>
+
+    <string name="streak_title_90">90-dae Mylpaal! 👑</string>
+    <string name="streak_msg_90">Drie maande sterk! Jy is \'n selfversorgingskampioen. Hou so aan!</string>
+
+    <string name="streak_title_365">1 JAAR REEKS! 🎊</string>
+    <string name="streak_msg_365">LEGENDARIES! Een volle jaar van daaglikse refleksie. Jy is \'n inspirasie!</string>
+
+    <!-- Format for multiples of 10 (e.g., 10, 20, 30...) -->
+    <string name="streak_title_multiple_of_10">%1$d-dae Reeks! 🔥</string>
+    <string name="streak_msg_multiple_of_10">Jy\'s aan die brand! %1$d dae van konsekwente selfversorging. Hou so aan!</string>
+
+    <!-- Default/title for any other count -->
+    <string name="streak_title_default">%1$d-dae Reeks! ✨</string>
+    <string name="streak_msg_default">Hou so aan! Jy bou \'n kragtige gewoonte.</string>
+
+
+        <string name="please_sign_in_to_continue">Teken asseblief aan om voort te gaan</string>
+        <string name="auth_requires_internet">Verifikasie vereis internetverbinding. As jy reeds aangeteken is, sal die app aanlynwerk. Skakel asseblief in vir internet om aan te teken of \'n rekening te skep.</string>
+        <string name="signing_in">Teken aan</string>
+
+
+        <string name="no_email_linked_to_username">Geen e-pos gekoppel aan hierdie gebruikersnaam nie</string>
+        <string name="username_not_found">Gebruikersnaam nie gevind nie</string>
+        <string name="generic_error_with_detail">Fout: %1$s</string>
+
+        <string name="network_error_check_connection">Netwerkfout. Kontroleer asseblief jou internetverbinding.</string>
+        <string name="internal_error_try_again">Interne fout. Probeer asseblief later weer.</string>
+        <string name="invalid_email_address">Ongeldige e-posadres.</string>
+        <string name="incorrect_password">Verkeerde wagwoord.</string>
+        <string name="user_not_found">Gebruiker nie gevind nie.</string>
+        <string name="account_disabled">Hierdie rekening is gedeaktiveer.</string>
+        <string name="too_many_attempts">Te veel mislukte pogings. Probeer asseblief later weer.</string>
+        <string name="login_failed_with_code">Aanmelding het misluk: %1$s</string>
+
+        <string name="unknown_error">Onbekende fout</string>
+        <string name="no_internet_connection_try_again">Geen internetverbinding. Kontroleer jou netwerk en probeer weer.</string>
+        <string name="login_failed_with_detail">Aanmelding het misluk: %1$s</string>
+
+        <string name="username_required">Gebruikersnaam is vereis</string>
+        <string name="password_required">Wagwoord is vereis</string>
+
+        <string name="sign_in_successful">Suksesvol aangeteken!</string>
+
+        <string name="default_web_client_id">DEFAULT_WEB_CLIENT_ID</string>
+        <string name="dev_error_check_sha">ONTWIKKELAAR_FOUT: Kontroleer SHA-1 en OAuth-opstelling</string>
+        <string name="user_cancelled">Aanmelding is gekanselleer</string>
+        <string name="google_signin_failed_with_code">Google-aanmelding het misluk: %1$d - %2$s</string>
+
+        <string name="auth_failed_try_again">Verifikasie het misluk. Probeer asseblief weer.</string>
+
+
+        <string name="github_auth_failed">GitHub verifikasie het misluk</string>
+        <string name="github_auth_cancelled">GitHub verifikasie gekanselleer</string>
+        <string name="github_client_id_not_configured">GitHub Client ID nie opgestel nie.</string>
+        <string name="authenticating_with_github">Verifieer met GitHub...</string>
+        <string name="github_auth_failed_with_detail">GitHub verifikasie het misluk: %1$s</string>
+        <string name="github_user_display_name">GitHub Gebruiker</string>
+        <string name="github_auth_successful">Welkom! GitHub verifikasie suksesvol</string>
+
+        <string name="enable_biometrics_title">Skakel biometrie in by Instellings</string>
+        <string name="enable_biometrics_message">Om biometriese aanmelding te gebruik, teken eers aan met jou rekening, gaan dan na Instellings en skakel Biometrie aan (skakelaar). Nadat dit geaktiveer is, sluit en heropen die app vir aktivering.</string>
+        <string name="ok">OK</string>
+
+        <string name="authentication_error_with_detail">Verifikasie fout: %1$s</string>
+        <string name="authentication_failed">Verifikasie het misluk</string>
+
+        <string name="unlock_with_biometrics_title">Ontsluit met biometrie</string>
+        <string name="unlock_with_biometrics_subtitle">Gebruik jou vingerafdruk of gesig om toegang tot die app te kry</string>
+
+
+        <string name="biometric_auth_successful">Biometriese verifikasie suksesvol</string>
+        <string name="no_internet_first_time_biometrics">Geen internetverbinding. Eerste keer biometriese verifikasie vereis internet.</string>
+        <string name="sign_in_first_to_enable_biometrics">Teken asseblief eers in met e-pos/wagwoord om biometrie te aktiveer.</string>
+
+
+
+
 </resources>
 
 
