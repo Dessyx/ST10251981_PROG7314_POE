@@ -163,7 +163,7 @@ class DiaryActivity : BaseActivity() {
                 selectedMood = null
                 btnSave.isEnabled = true
                 
-                // Handle streak and mood notifications
+               
                 handlePostSaveNotifications(user.uid)
             }.onFailure { e ->
                 Toast.makeText(this@DiaryActivity, "Entry saved locally. Will sync when online.", Toast.LENGTH_SHORT).show()
@@ -171,7 +171,7 @@ class DiaryActivity : BaseActivity() {
                 selectedMood = null
                 btnSave.isEnabled = true
                 
-                // Handle streak and mood notifications even for offline saves
+              
                 handlePostSaveNotifications(user.uid)
             }
         }

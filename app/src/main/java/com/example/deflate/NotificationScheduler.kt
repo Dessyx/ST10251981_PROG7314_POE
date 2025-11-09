@@ -23,10 +23,7 @@ object NotificationScheduler {
         scheduleMoodAnalysis(context)
     }
     
-    /**
-     * Schedule daily diary reminder notification
-     * Runs every day at 8 PM
-     */
+ 
     fun scheduleDailyReminder(context: Context, hourOfDay: Int = 20) {
         val currentTime = Calendar.getInstance()
         val targetTime = Calendar.getInstance().apply {
@@ -81,7 +78,6 @@ object NotificationScheduler {
     
 
      // Cancel all scheduled notifications
- 
     fun cancelAllNotifications(context: Context) {
         WorkManager.getInstance(context).cancelUniqueWork(DIARY_REMINDER_WORK_NAME)
         WorkManager.getInstance(context).cancelUniqueWork(MOOD_ANALYSIS_WORK_NAME)

@@ -5,9 +5,6 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.deflate.NotificationHelper
 
-/**
- * Worker to send daily diary reminder notifications
- */
 class DiaryReminderWorker(
     context: Context,
     params: WorkerParameters

@@ -75,7 +75,7 @@
     <string name="streak_icon_desc">Diary streak icon</string>
     <string name="streak_title">Diary entry streak for the month</string>
     <string name="streak_days">9 days</string>
-    <string name="Deflate">YourAppName</string>
+    <string name="Deflate">Deflate</string>
     <string name="facebook_app_id">YOUR_FACEBOOK_APP_ID_HERE</string>
     <string name="facebook_client_token">YOUR_FACEBOOK_CLIENT_TOKEN_HERE</string>
     <string name="language_label">Language</string>
