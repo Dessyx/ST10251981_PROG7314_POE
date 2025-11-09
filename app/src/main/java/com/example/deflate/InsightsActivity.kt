@@ -261,36 +261,27 @@ class InsightsActivity : BaseActivity() {
     }
     
     private fun loadStreakData(userId: String) {
-        val dateRange = getDateRange()
-        val allDates = mutableSetOf<String>()
-        
         // Load from local database (offline support)
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 val diaryEntries = diaryRepository.getAllEntriesSync(userId)
                 val moodEntries = moodRepository.getAllMoodEntriesSync(userId)
+                val allDates = mutableSetOf<String>()
                 
-                // Filter diary entries by date range
+                // Collect all diary entry dates
                 diaryEntries.forEach { entry ->
-                    if (entry.timestamp >= dateRange.first && entry.timestamp <= dateRange.second) {
-                        val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(entry.timestamp))
-                        allDates.add(date)
-                    }
+                    val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(entry.timestamp))
+                    allDates.add(date)
                 }
                 
-                // Filter mood entries by date range
+                // Collect all mood entry dates
                 moodEntries.forEach { entry ->
-                    if (entry.timestamp >= dateRange.first && entry.timestamp <= dateRange.second) {
-                        val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(entry.timestamp))
-                        allDates.add(date)
-                    }
+                    val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(entry.timestamp))
+                    allDates.add(date)
                 }
                 
-                // Sort all dates
-                val sortedDates = allDates.sorted()
-                
-                // Count completed streaks (7+ consecutive days)
-                val completedStreaks = countCompletedStreaks(sortedDates)
+                // Calculate number of completed 7+ day streaks
+                val completedStreaks = calculateCompletedStreaks(allDates)
                 tvStreakCount.text = completedStreaks.toString()
             } catch (e: Exception) {
                 Log.e("InsightsActivity", "Error loading streak data", e)
@@ -299,47 +290,41 @@ class InsightsActivity : BaseActivity() {
         }
     }
     
-    private fun countCompletedStreaks(dates: List<String>): Int {
-        if (dates.isEmpty()) {
-            return 0
-        }
+    // Calculate number of completed 7-day streaks (weeks)
+    private fun calculateCompletedStreaks(entryDates: Set<String>): Int {
+        if (entryDates.isEmpty()) return 0
         
-        
-        var completedStreaks = 0
+        val sortedDates = entryDates.sorted()
+        var totalCompletedStreaks = 0
         var currentStreak = 1
-        var longestStreak = 1
         
-        for (i in 1 until dates.size) {
-            val prevDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dates[i - 1])
-            val currDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dates[i])
+        for (i in 1 until sortedDates.size) {
+            val prevDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(sortedDates[i - 1])
+            val currDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(sortedDates[i])
             
             if (prevDate != null && currDate != null) {
                 val diffInMillis = currDate.time - prevDate.time
                 val diffInDays = (diffInMillis / (1000 * 60 * 60 * 24)).toInt()
                 
-                
                 if (diffInDays == 1) {
                     // Consecutive day
                     currentStreak++
                 } else {
-                    // Streak broken
+                    // Streak broken - count how many complete 7-day periods were in this streak
                     if (currentStreak >= 7) {
-                        completedStreaks++
+                        totalCompletedStreaks += currentStreak / 7
                     }
-                    longestStreak = Math.max(longestStreak, currentStreak)
                     currentStreak = 1
                 }
             }
         }
         
-
+        // Don't forget to count the last streak if it's still ongoing
         if (currentStreak >= 7) {
-            completedStreaks++
+            totalCompletedStreaks += currentStreak / 7
         }
         
-        longestStreak = Math.max(longestStreak, currentStreak)
-        
-        return completedStreaks
+        return totalCompletedStreaks
     }
     
     
@@ -782,12 +767,10 @@ class InsightsActivity : BaseActivity() {
         val dateRange = getDateRange()
         val moodCounts = mutableMapOf<String, Int>()
 
-        if (currentFilter == "day") {
-        } else {
-            val moodTypes = listOf("Happy", "Excited", "Content", "Anxious", "Tired", "Sad")
-            moodTypes.forEach { mood ->
-                moodCounts[mood] = 0
-            }
+        // Initialize all mood types with 0 for all filters (day, week, month)
+        val moodTypes = listOf("Happy", "Excited", "Content", "Anxious", "Tired", "Sad")
+        moodTypes.forEach { mood ->
+            moodCounts[mood] = 0
         }
         
         // Load from local database (offline support)
@@ -800,14 +783,8 @@ class InsightsActivity : BaseActivity() {
                 moodEntries.forEach { entry ->
                     val shouldInclude = entry.timestamp >= dateRange.first && entry.timestamp <= dateRange.second
                     
-                    if (shouldInclude && entry.mood.isNotEmpty()) {
-                        if (currentFilter == "day") {
-                            moodCounts[entry.mood] = (moodCounts[entry.mood] ?: 0) + 1
-                        } else {
-                            if (moodCounts.containsKey(entry.mood)) {
-                                moodCounts[entry.mood] = (moodCounts[entry.mood] ?: 0) + 1
-                            }
-                        }
+                    if (shouldInclude && entry.mood.isNotEmpty() && moodCounts.containsKey(entry.mood)) {
+                        moodCounts[entry.mood] = (moodCounts[entry.mood] ?: 0) + 1
                     }
                 }
                 
@@ -815,14 +792,8 @@ class InsightsActivity : BaseActivity() {
                 diaryEntries.forEach { entry ->
                     val shouldInclude = entry.timestamp >= dateRange.first && entry.timestamp <= dateRange.second
                     
-                    if (shouldInclude && entry.mood.isNotEmpty()) {
-                        if (currentFilter == "day") {
-                            moodCounts[entry.mood] = (moodCounts[entry.mood] ?: 0) + 1
-                        } else {
-                            if (moodCounts.containsKey(entry.mood)) {
-                                moodCounts[entry.mood] = (moodCounts[entry.mood] ?: 0) + 1
-                            }
-                        }
+                    if (shouldInclude && entry.mood.isNotEmpty() && moodCounts.containsKey(entry.mood)) {
+                        moodCounts[entry.mood] = (moodCounts[entry.mood] ?: 0) + 1
                     }
                 }
                 

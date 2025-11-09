@@ -14,6 +14,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.*
 
@@ -218,15 +219,27 @@ class SignUpActivity : BaseActivity() {
             "isActive" to true
         )
 
-        firestore.collection("users")
-            .document(uid)
-            .set(userData)
-            .addOnSuccessListener {
-                handleRegistrationSuccess(name, surname)
-            }
-            .addOnFailureListener { exception ->
-                handleRegistrationError("User created but failed to save data: ${exception.message}")
-            }
+
+        val user = auth.currentUser
+        val profileUpdates = UserProfileChangeRequest.Builder()
+            .setDisplayName(name)
+            .build()
+        
+        user?.updateProfile(profileUpdates)?.addOnCompleteListener { profileTask ->
+
+            firestore.collection("users")
+                .document(uid)
+                .set(userData)
+                .addOnSuccessListener {
+                    // Save name to SharedPreferences for offline access
+                    val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+                    prefs.edit().putString("pending_name_update", name).apply()
+                    handleRegistrationSuccess(name, surname)
+                }
+                .addOnFailureListener { exception ->
+                    handleRegistrationError("User created but failed to save data: ${exception.message}")
+                }
+        }
     }
 
     // Success handler

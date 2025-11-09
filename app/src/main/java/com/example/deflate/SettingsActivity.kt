@@ -35,6 +35,8 @@ class SettingsActivity : BaseActivity() {
         private const val KEY_BIOMETRICS_ENABLED = "biometrics_enabled"
         private const val KEY_BIOMETRICS_ACTIVE = "biometrics_active"
         private const val KEY_BIOMETRICS_NEEDS_RESTART = "biometrics_needs_restart"
+        private const val KEY_NOTIFICATIONS_ENABLED = "notifications_enabled"
+        private const val KEY_REMINDER_FREQUENCY = "reminder_frequency"
         private const val LANG_PREFS_FILE = "language_prefs"
         private const val KEY_LANGUAGE_ENGLISH_SELECTED = "language_english_selected"
     }
@@ -42,13 +44,17 @@ class SettingsActivity : BaseActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var tvUserName: TextView
     private lateinit var languageToggle: LanguageToggleView
+    private lateinit var btnReminderDaily: TextView
+    private lateinit var btnReminderWeekly: TextView
+    private lateinit var btnReminderMonthly: TextView
+    private lateinit var notificationToggle: NotificationToggleView
 
 
 
 
     //-------------------------------------------------------------------------
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Apply saved language before inflating layout
+
         LocaleHelper.setLocale(this, LocaleHelper.getLocale(this))
 
         super.onCreate(savedInstanceState)
@@ -56,20 +62,17 @@ class SettingsActivity : BaseActivity() {
 
         // Initialize the switch
         languageToggle = findViewById(R.id.languageToggle)
+         val langPrefs = getSharedPreferences(LANG_PREFS_FILE, MODE_PRIVATE)
 
-        // USE A SEPARATE PREFS FILE FOR LANGUAGE SETTINGS
-        // This avoids conflicts with other code that uses 'val prefs = getSharedPreferences(PREFS_FILE, ...)'
-        val langPrefs = getSharedPreferences(LANG_PREFS_FILE, MODE_PRIVATE)
 
-        // Determine initial language: prefer persisted user choice in language_prefs
         val savedLangPref = langPrefs.getString(KEY_LANGUAGE_ENGLISH_SELECTED, null)
-        val currentLocale = LocaleHelper.getLocale(this) // returns "en" or "af" (expected)
+        val currentLocale = LocaleHelper.getLocale(this)
         val englishSelectedInitial = when {
-            savedLangPref != null -> savedLangPref.toBoolean() // persisted value takes precedence
-            else -> (currentLocale == "en") // fallback to LocaleHelper
+            savedLangPref != null -> savedLangPref.toBoolean()
+            else -> (currentLocale == "en")
         }
 
-        // left = English, right = Afrikaans
+
         languageToggle.setLeftSelected(englishSelectedInitial, animate = false)
 
         // When toggled, set locale and persist choice into language_prefs
@@ -106,9 +109,19 @@ class SettingsActivity : BaseActivity() {
         val currentName = pendingName ?: user?.displayName ?: user?.email?.substringBefore("@") ?: "User"
 
         val biometricToggle = findViewById<BiometricToggleView>(R.id.biometricToggle)
-        val enabled = prefs.getBoolean("biometrics_enabled", false)
-
-        biometricToggle.setChecked(enabled, animate = false)
+        val biometricEnabled = prefs.getBoolean("biometrics_enabled", false)
+        biometricToggle.setChecked(biometricEnabled, animate = false)
+        
+        // Notification toggle setup
+        notificationToggle = findViewById(R.id.notificationToggle)
+        val notificationsEnabled = prefs.getBoolean(KEY_NOTIFICATIONS_ENABLED, true) // Default to ON
+        notificationToggle.setChecked(notificationsEnabled, animate = false)
+        btnReminderDaily = findViewById(R.id.btnReminderDaily)
+        btnReminderWeekly = findViewById(R.id.btnReminderWeekly)
+        btnReminderMonthly = findViewById(R.id.btnReminderMonthly)
+        val savedFrequency = prefs.getString(KEY_REMINDER_FREQUENCY, "daily") ?: "daily"
+        setReminderFrequency(savedFrequency, animate = false)
+        updateReminderButtonsState(notificationsEnabled)
 
         tvUserName.text = currentName
         etName.setText(currentName)
@@ -182,27 +195,70 @@ class SettingsActivity : BaseActivity() {
 
         // Delete account
         btnDeleteAccount.setOnClickListener {
-            user?.delete()?.addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Toast.makeText(this, "Account deleted", Toast.LENGTH_LONG).show()
-                    val intent = Intent(this, SignInActivity::class.java)
-                    intent.flags =
-                        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    startActivity(intent)
-                    finish()
-                } else {
-                    Toast.makeText(
-                        this,
-                        "Failed: ${task.exception?.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Delete Account")
+                .setMessage("⚠️ WARNING: This will permanently delete your account and ALL your data (diary entries, moods, activities, etc.). This action CANNOT be undone!\n\nAre you absolutely sure?")
+                .setPositiveButton("Yes, Delete Everything") { _, _ ->
+                    androidx.appcompat.app.AlertDialog.Builder(this)
+                        .setTitle("Final Confirmation")
+                        .setMessage("This is your last chance! Deleting your account is PERMANENT. Continue?")
+                        .setPositiveButton("DELETE ACCOUNT") { _, _ ->
+                            performAccountDeletion()
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .show()
                 }
-            }
+                .setNegativeButton("Cancel", null)
+                .show()
         }
 
+        // Reminder frequency button listeners
+        btnReminderDaily.setOnClickListener {
+            if (notificationToggle.isChecked) {
+                setReminderFrequency("daily")
+                updateNotificationSchedule("daily")
+            }
+        }
+        
+        btnReminderWeekly.setOnClickListener {
+            if (notificationToggle.isChecked) {
+                setReminderFrequency("weekly")
+                updateNotificationSchedule("weekly")
+            }
+        }
+        
+        btnReminderMonthly.setOnClickListener {
+            if (notificationToggle.isChecked) {
+                setReminderFrequency("monthly")
+                updateNotificationSchedule("monthly")
+            }
+        }
+        
+        // Notification toggle listener
+        notificationToggle.setOnCheckedChangeListener { checked ->
+            prefs.edit()
+                .putBoolean(KEY_NOTIFICATIONS_ENABLED, checked)
+                .apply()
+
+            updateReminderButtonsState(checked)
+            
+            if (checked) {
+
+                Toast.makeText(this, "Notifications enabled", Toast.LENGTH_SHORT).show()
+
+                val frequency = prefs.getString(KEY_REMINDER_FREQUENCY, "daily") ?: "daily"
+                updateNotificationSchedule(frequency)
+            } else {
+
+                Toast.makeText(this, "Notifications disabled", Toast.LENGTH_SHORT).show()
+
+                NotificationScheduler.cancelAllNotifications(this)
+            }
+        }
+        
         biometricToggle.setOnCheckedChangeListener { checked ->
             if (checked) {
-                // optional: verify device supports biometrics first
+
                 val bm = androidx.biometric.BiometricManager.from(this)
                 val can =
                     bm.canAuthenticate(androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG or androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK)
@@ -326,6 +382,113 @@ class SettingsActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
         syncPendingNameUpdate()
+    }
+    
+    private fun performAccountDeletion() {
+        val user = auth.currentUser
+        if (user != null) {
+            user.delete().addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val prefs = getSharedPreferences(PREFS_FILE, MODE_PRIVATE)
+                    prefs.edit().clear().apply()
+                    val homePrefs = getSharedPreferences("home_prefs", MODE_PRIVATE)
+                    homePrefs.edit().clear().apply()
+                    
+                    Toast.makeText(this, "Account permanently deleted", Toast.LENGTH_LONG).show()
+                    val intent = Intent(this, MainActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                    finish()
+                } else {
+                    val errorMessage = task.exception?.message ?: "Unknown error"
+                    Toast.makeText(
+                        this,
+                        "Failed to delete account: $errorMessage\n\nYou may need to re-authenticate first.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+    
+    private fun setReminderFrequency(frequency: String, animate: Boolean = true) {
+        val prefs = getSharedPreferences(PREFS_FILE, MODE_PRIVATE)
+        prefs.edit().putString(KEY_REMINDER_FREQUENCY, frequency).apply()
+        
+        // Update button appearances
+        when (frequency) {
+            "daily" -> {
+                btnReminderDaily.background = getDrawable(R.drawable.selected_filter_bg)
+                btnReminderDaily.setTypeface(null, android.graphics.Typeface.BOLD)
+                btnReminderWeekly.background = getDrawable(R.drawable.unselected_filter_bg)
+                btnReminderWeekly.setTypeface(null, android.graphics.Typeface.NORMAL)
+                btnReminderMonthly.background = getDrawable(R.drawable.unselected_filter_bg)
+                btnReminderMonthly.setTypeface(null, android.graphics.Typeface.NORMAL)
+            }
+            "weekly" -> {
+                btnReminderDaily.background = getDrawable(R.drawable.unselected_filter_bg)
+                btnReminderDaily.setTypeface(null, android.graphics.Typeface.NORMAL)
+                btnReminderWeekly.background = getDrawable(R.drawable.selected_filter_bg)
+                btnReminderWeekly.setTypeface(null, android.graphics.Typeface.BOLD)
+                btnReminderMonthly.background = getDrawable(R.drawable.unselected_filter_bg)
+                btnReminderMonthly.setTypeface(null, android.graphics.Typeface.NORMAL)
+            }
+            "monthly" -> {
+                btnReminderDaily.background = getDrawable(R.drawable.unselected_filter_bg)
+                btnReminderDaily.setTypeface(null, android.graphics.Typeface.NORMAL)
+                btnReminderWeekly.background = getDrawable(R.drawable.unselected_filter_bg)
+                btnReminderWeekly.setTypeface(null, android.graphics.Typeface.NORMAL)
+                btnReminderMonthly.background = getDrawable(R.drawable.selected_filter_bg)
+                btnReminderMonthly.setTypeface(null, android.graphics.Typeface.BOLD)
+            }
+        }
+    }
+    
+    private fun updateReminderButtonsState(enabled: Boolean) {
+        if (enabled) {
+            btnReminderDaily.isEnabled = true
+            btnReminderWeekly.isEnabled = true
+            btnReminderMonthly.isEnabled = true
+
+            val prefs = getSharedPreferences(PREFS_FILE, MODE_PRIVATE)
+            val frequency = prefs.getString(KEY_REMINDER_FREQUENCY, "daily") ?: "daily"
+            setReminderFrequency(frequency, animate = false)
+        } else {
+
+            btnReminderDaily.isEnabled = false
+            btnReminderWeekly.isEnabled = false
+            btnReminderMonthly.isEnabled = false
+            
+            btnReminderDaily.background = getDrawable(R.drawable.disabled_filter_bg)
+            btnReminderDaily.setTextColor(getColor(android.R.color.darker_gray))
+            btnReminderWeekly.background = getDrawable(R.drawable.disabled_filter_bg)
+            btnReminderWeekly.setTextColor(getColor(android.R.color.darker_gray))
+            btnReminderMonthly.background = getDrawable(R.drawable.disabled_filter_bg)
+            btnReminderMonthly.setTextColor(getColor(android.R.color.darker_gray))
+        }
+    }
+    
+    private fun updateNotificationSchedule(frequency: String) {
+        // Cancel existing notifications
+        NotificationScheduler.cancelAllNotifications(this)
+        
+        // Schedule based on frequency
+        when (frequency) {
+            "daily" -> {
+                NotificationScheduler.scheduleAllNotifications(this)
+                Toast.makeText(this, "Daily reminders enabled", Toast.LENGTH_SHORT).show()
+            }
+            "weekly" -> {
+
+                NotificationScheduler.scheduleWeeklyReminder(this)
+                Toast.makeText(this, "Weekly reminders enabled (Sunday 8 PM)", Toast.LENGTH_SHORT).show()
+            }
+            "monthly" -> {
+
+                NotificationScheduler.scheduleMonthlyReminder(this)
+                Toast.makeText(this, "Monthly reminders enabled (1st of month 8 PM)", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
     
     private fun performLogout() {

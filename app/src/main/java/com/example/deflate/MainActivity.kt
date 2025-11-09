@@ -21,25 +21,47 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         
         // ========================================================================
-        // OFFLINE ACCESS: Check for cached authentication session
-        // ========================================================================
-        // Firebase caches authentication tokens locally after first login.
-        // This allows users to access the app OFFLINE after they've logged in once.
-        // 
-        // How it works:
-        // 1. User signs in while online → Firebase validates → Token cached
-        // 2. User closes app and goes offline
-        // 3. User reopens app → This check finds cached token → User is logged in!
-        // 4. App works fully offline (diary, activities, mood, etc.)
+        // AUTHENTICATION CHECK: Check for cached session and biometrics
         // ========================================================================
         val auth = FirebaseAuth.getInstance()
         val currentUser = auth.currentUser
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        
         if (currentUser != null) {
-            // User is already logged in (cached session) - works offline!
-            val intent = Intent(this, HomeActivity::class.java)
-            startActivity(intent)
-            finish()
-            return
+            // User has a cached session
+            val biometricsEnabled = prefs.getBoolean("biometrics_enabled", false)
+            val biometricsActive = prefs.getBoolean("biometrics_active", false)
+            val needsRestart = prefs.getBoolean("biometrics_needs_restart", false)
+            
+            // If biometrics are active, require authentication at SignInActivity
+            if (biometricsEnabled && biometricsActive) {
+                // Redirect to SignInActivity for biometric authentication
+                val intent = Intent(this, SignInActivity::class.java)
+                intent.putExtra("REQUIRE_BIOMETRIC_AUTH", true)
+                startActivity(intent)
+                finish()
+                return
+            } 
+            // If biometrics need restart, activate them now
+            else if (needsRestart) {
+                prefs.edit()
+                    .putBoolean("biometrics_active", true)
+                    .putBoolean("biometrics_needs_restart", false)
+                    .apply()
+                // Redirect to SignInActivity for biometric authentication
+                val intent = Intent(this, SignInActivity::class.java)
+                intent.putExtra("REQUIRE_BIOMETRIC_AUTH", true)
+                startActivity(intent)
+                finish()
+                return
+            }
+            // No biometrics, allow offline access
+            else {
+                val intent = Intent(this, HomeActivity::class.java)
+                startActivity(intent)
+                finish()
+                return
+            }
         }
         
         setContentView(R.layout.activity_main)

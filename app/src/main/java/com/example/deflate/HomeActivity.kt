@@ -146,7 +146,11 @@ class HomeActivity : BaseActivity() {
         // Get the logged in Firebase user
         val currentUser = auth.currentUser
         val updatedName = intent.getStringExtra("UPDATED_NAME")
-        val username = updatedName ?: currentUser?.displayName ?: currentUser?.email?.substringBefore("@") ?: "User"
+        
+
+        val appPrefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val pendingName = appPrefs.getString("pending_name_update", null)
+         val username = updatedName ?: pendingName ?: currentUser?.displayName ?: currentUser?.email?.substringBefore("@") ?: "User"
 
         //  Welcome text
         val tvWelcome = findViewById<TextView>(R.id.tvWelcome)
@@ -193,6 +197,7 @@ class HomeActivity : BaseActivity() {
         
         // Request notification permission 
         NotificationPermissionHelper.requestNotificationPermission(this)
+        refreshUsername()
 
         // Bottom navigation
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)
@@ -345,68 +350,52 @@ class HomeActivity : BaseActivity() {
         
         Log.d("HomeActivity", "📅 Week range: ${SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(weekStart))} to ${SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(weekEnd))}")
         
-        val datesThisWeek = mutableSetOf<String>()
-        var maxStreak = 7
-        var completedQueries = 0
-        val totalQueries = 2
 
-        fun checkAndUpdateStreak() {
-            completedQueries++
-            if (completedQueries >= totalQueries) {
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val datesThisWeek = mutableSetOf<String>()
+                
+                // Get local database instance
+                val localDb = com.example.deflate.database.AppDatabase.getDatabase(this@HomeActivity)
+                val diaryEntries = withContext(Dispatchers.IO) {
+                    localDb.diaryEntryDao().getAllEntriesSync(currentUser.uid)
+                }
+
+                val moodEntries = withContext(Dispatchers.IO) {
+                    localDb.moodEntryDao().getAllMoodEntriesSync(currentUser.uid)
+                }
+                
+                Log.d("HomeActivity", "📝 Found ${diaryEntries.size} total diary entries in local DB")
+                Log.d("HomeActivity", "🎭 Found ${moodEntries.size} total mood entries in local DB")
+                
+
+                diaryEntries.forEach { entry ->
+                    if (entry.timestamp >= weekStart && entry.timestamp <= weekEnd) {
+                        val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(entry.timestamp))
+                        datesThisWeek.add(date)
+                        Log.d("HomeActivity", "📝 Diary entry on: $date")
+                    }
+                }
+
+                moodEntries.forEach { entry ->
+                    if (entry.timestamp >= weekStart && entry.timestamp <= weekEnd) {
+                        val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(entry.timestamp))
+                        datesThisWeek.add(date)
+                        Log.d("HomeActivity", "🎭 Mood entry on: $date")
+                    }
+                }
+                
                 val daysLoggedThisWeek = datesThisWeek.size
                 Log.d("HomeActivity", "📅 Total unique days logged this week: $daysLoggedThisWeek")
                 Log.d("HomeActivity", "📅 Days: ${datesThisWeek.sorted()}")
                 
                 // Update UI
-                updateStreakUI(daysLoggedThisWeek, maxStreak)
+                updateStreakUI(daysLoggedThisWeek, 7)
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "Error loading streak data", e)
+                updateStreakUI(0, 7)
             }
         }
-
-        // Check diary entries (server-side filtering with indexes)
-        db.collection("diaryEntries")
-            .whereEqualTo("userId", currentUser.uid)
-            .whereGreaterThanOrEqualTo("timestamp", weekStart)
-            .whereLessThanOrEqualTo("timestamp", weekEnd)
-            .get()
-            .addOnSuccessListener { diaryDocs ->
-                Log.d("HomeActivity", "📝 Found ${diaryDocs.size()} diary entries this week")
-                
-                for (document in diaryDocs) {
-                    val timestamp = document.getLong("timestamp") ?: 0L
-                    val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(timestamp))
-                    datesThisWeek.add(date)
-                    Log.d("HomeActivity", "📝 Diary entry on: $date")
-                }
-                Log.d("HomeActivity", "📝 Diary days this week: ${datesThisWeek.size}")
-                checkAndUpdateStreak()
-            }
-            .addOnFailureListener { e ->
-                Log.e("HomeActivity", "Error loading diary entries for streak", e)
-                checkAndUpdateStreak()
-            }
-
-        // Also check mood entries this week
-        db.collection("moodEntries")
-            .whereEqualTo("userId", currentUser.uid)
-            .whereGreaterThanOrEqualTo("timestamp", weekStart)
-            .whereLessThanOrEqualTo("timestamp", weekEnd)
-            .get()
-            .addOnSuccessListener { moodDocs ->
-                Log.d("HomeActivity", "🎭 Found ${moodDocs.size()} mood entries this week")
-                
-                for (document in moodDocs) {
-                    val timestamp = document.getLong("timestamp") ?: 0L
-                    val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(timestamp))
-                    datesThisWeek.add(date)
-                    Log.d("HomeActivity", "🎭 Mood entry on: $date")
-                }
-                Log.d("HomeActivity", "🎭 Mood days this week: ${datesThisWeek.size}")
-                checkAndUpdateStreak()
-            }
-            .addOnFailureListener { e ->
-                Log.e("HomeActivity", "Error loading mood entries for streak", e)
-                checkAndUpdateStreak()
-            }
     }
 
     private fun updateStreakUI(currentStreak: Int, maxStreak: Int) {
@@ -415,15 +404,13 @@ class HomeActivity : BaseActivity() {
         val tvStreakMessage = findViewById<TextView>(R.id.tvStreakMessage)
 
         Log.d("HomeActivity", "🔥 Updating streak UI: $currentStreak/$maxStreak days")
-        
-        // Update streak text - showing days logged this week
+
         tvStreak?.text = "🔥 $currentStreak/$maxStreak days this week"
         
         // Update progress bar
         progressStreak?.max = maxStreak
         progressStreak?.progress = currentStreak
-        
-        // Update message with more specific guidance
+
         val daysLeft = maxStreak - currentStreak
         when {
             currentStreak == 0 -> {
@@ -438,6 +425,25 @@ class HomeActivity : BaseActivity() {
         }
     }
 
+    //-------------------------------------------------------------------------
+    // Refresh username from various sources
+    private fun refreshUsername() {
+        val currentUser = auth.currentUser
+        val appPrefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val pendingName = appPrefs.getString("pending_name_update", null)
+        
+        val username = pendingName ?: currentUser?.displayName ?: currentUser?.email?.substringBefore("@") ?: "User"
+        
+        val tvWelcome = findViewById<TextView>(R.id.tvWelcome)
+        tvWelcome?.text = "Welcome, $username"
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        refreshUsername()
+        loadStreakData()
+    }
+    
     //-------------------------------------------------------------------------
     // Save mood entry (local first, then sync)
     private fun saveMoodEntryToFirestore(mood: String) {

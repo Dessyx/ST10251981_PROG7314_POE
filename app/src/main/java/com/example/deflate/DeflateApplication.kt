@@ -20,7 +20,19 @@ class DeflateApplication : Application() {
         
         // Initialize notification system
         NotificationHelper.createNotificationChannels(this)
-        NotificationScheduler.scheduleAllNotifications(this)
+
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val notificationsEnabled = prefs.getBoolean("notifications_enabled", true) 
+        if (notificationsEnabled) {
+
+            val frequency = prefs.getString("reminder_frequency", "daily") ?: "daily"
+            when (frequency) {
+                "daily" -> NotificationScheduler.scheduleAllNotifications(this)
+                "weekly" -> NotificationScheduler.scheduleWeeklyReminder(this)
+                "monthly" -> NotificationScheduler.scheduleMonthlyReminder(this)
+                else -> NotificationScheduler.scheduleAllNotifications(this)
+            }
+        }
     }
 }
 

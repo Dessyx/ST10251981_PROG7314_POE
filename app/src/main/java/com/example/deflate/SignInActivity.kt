@@ -102,43 +102,43 @@ class SignInActivity : BaseActivity() {
 
         biometricSignInButton.isVisible = Biometrics.isAvailable(this)
 
-        // ========================================================================
-        // OFFLINE AUTHENTICATION EXPLANATION:
-        // ========================================================================
-        // Firebase Authentication REQUIRES internet for sign-in/sign-up because:
-        // 1. Password verification happens on Firebase servers (passwords are hashed server-side)
-        // 2. Account validation (check if account exists, is disabled, etc.)
-        // 3. Token generation (JWT tokens are cryptographically signed by Firebase)
-        // 4. Security features (rate limiting, brute force protection)
-        //
-        // HOWEVER, once a user is logged in, Firebase caches the authentication token locally.
-        // This cached token allows the app to work OFFLINE after the first login.
-        //
-        // FLOW:
-        // 1. First login: Requires internet → Firebase validates → Token cached locally
-        // 2. Subsequent app launches: Check for cached token → If exists, user is logged in → Works offline!
-        // 3. Token expiration: After ~1 hour, user needs to sign in again (requires internet)
-        // ========================================================================
+        // Check if biometric authentication is required
+        val requireBiometricAuth = intent.getBooleanExtra("REQUIRE_BIOMETRIC_AUTH", false)
         
-        // Check if user is already logged in (cached session) - allows offline access
-        val currentUser = auth.currentUser
-        if (currentUser != null) {
-            // User is already logged in, go directly to home (works offline)
-            // This is the key to offline functionality - cached authentication tokens!
-            handleSignInSuccess()
+        if (requireBiometricAuth) {
+            val currentUser = auth.currentUser
+            if (currentUser != null) {
+
+                val prefs = getSharedPreferences(PREFS_FILE, MODE_PRIVATE)
+                val biometricsActive = prefs.getBoolean(KEY_BIOMETRICS_ACTIVE, false)
+                
+                if (biometricsActive) {
+
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        authenticateAndProceed()
+                    }, 300)
+                } else {
+
+                    handleSignInSuccess()
+                }
+            } else {
+
+                Toast.makeText(this, "Please sign in to continue", Toast.LENGTH_SHORT).show()
+            }
             return
         }
+        
 
-        // Activation after restart:
-        // If the user previously enabled biometrics and the "needs_restart" flag is set,
-        // we only mark the biometrics as active now (this code runs at app start).
-        // This enforces the "close and reopen app for biometrics to work" rule.
-        val prefs = getSharedPreferences(PREFS_FILE, MODE_PRIVATE)
-        val needsRestart = prefs.getBoolean(KEY_BIOMETRICS_NEEDS_RESTART, false)
-        if (needsRestart) {
-            // App has been restarted (we're now running): activate biometrics and clear the flag.
-            prefs.edit().putBoolean(KEY_BIOMETRICS_ACTIVE, true).putBoolean(KEY_BIOMETRICS_NEEDS_RESTART, false).apply()
-            Log.d(TAG, "Biometrics activation: app restart detected - biometrics now active")
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            val prefs = getSharedPreferences(PREFS_FILE, MODE_PRIVATE)
+            val biometricsActive = prefs.getBoolean(KEY_BIOMETRICS_ACTIVE, false)
+            
+
+            if (!biometricsActive) {
+                handleSignInSuccess()
+                return
+            }
         }
     }
 
@@ -172,12 +172,7 @@ class SignInActivity : BaseActivity() {
 
         if (!validateInputs(input, password)) return
 
-        // Check network connectivity
-        // NOTE: Authentication requires internet because:
-        // - Password verification happens on Firebase servers
-        // - Account validation requires server communication
-        // - Token generation requires Firebase servers
-        // Once logged in, the cached token allows offline access!
+      
         if (!isNetworkAvailable()) {
             showError("Authentication requires internet connection. If you're already logged in, the app will work offline. Please connect to the internet to sign in or create an account.")
             return
@@ -288,7 +283,48 @@ class SignInActivity : BaseActivity() {
         Toast.makeText(this, "Sign in successful!", Toast.LENGTH_LONG).show()
         signinButton.isEnabled = true
         signinButton.text = "Sign In"
-        navigateToHome()
+        
+        // Fetch and save user name to SharedPreferences, THEN navigate
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            fetchAndSaveUserName(currentUser.uid) {
+                // Navigate to home after name is fetched
+                navigateToHome()
+            }
+        } else {
+            navigateToHome()
+        }
+    }
+    
+    private fun fetchAndSaveUserName(userId: String, onComplete: () -> Unit) {
+        val db = FirebaseFirestore.getInstance()
+        db.collection("users")
+            .document(userId)
+            .get()
+            .addOnSuccessListener { document ->
+                val name = document.getString("name")
+                if (name != null && name.isNotEmpty()) {
+                    // Save to SharedPreferences
+                    val prefs = getSharedPreferences(PREFS_FILE, MODE_PRIVATE)
+                    prefs.edit().putString("pending_name_update", name).apply()
+                    
+
+                    val currentUser = auth.currentUser
+                    if (currentUser?.displayName.isNullOrEmpty()) {
+                        val profileUpdates = UserProfileChangeRequest.Builder()
+                            .setDisplayName(name)
+                            .build()
+                        currentUser?.updateProfile(profileUpdates)
+                    }
+                }
+
+                onComplete()
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Failed to fetch user name", e)
+
+                onComplete()
+            }
     }
 
     private fun handleSignInError(errorMessage: String) {
@@ -501,17 +537,17 @@ class SignInActivity : BaseActivity() {
             }
 
             enabled && !active -> {
-                // Biometrics enabled in Settings but app hasn't been restarted yet
-                AlertDialog.Builder(this)
-                    .setTitle("Restart required")
-                    .setMessage("Biometric sign-in will be available after you close and re-open the app. Please close and re-open the app, then try again.")
-                    .setPositiveButton("OK", null)
-                    .show()
-                return
+                // Biometrics enabled but not yet active - activate now
+                prefs.edit()
+                    .putBoolean(KEY_BIOMETRICS_ACTIVE, true)
+                    .putBoolean(KEY_BIOMETRICS_NEEDS_RESTART, false)
+                    .apply()
+                Log.d(TAG, "Biometrics activated on demand")
+                authenticateAndProceed()
             }
 
             enabled && active -> {
-
+                // Biometrics are active, proceed with authentication
                 authenticateAndProceed()
             }
         }

@@ -88,5 +88,85 @@ object NotificationScheduler {
         WorkManager.getInstance(context).cancelUniqueWork(DIARY_REMINDER_WORK_NAME)
         scheduleDailyReminder(context, hourOfDay)
     }
+    
+    /**
+     * Schedule weekly diary reminder (every Sunday at 8 PM)
+     */
+    fun scheduleWeeklyReminder(context: Context, hourOfDay: Int = 20) {
+        val currentTime = Calendar.getInstance()
+        val targetTime = Calendar.getInstance().apply {
+            set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
+            set(Calendar.HOUR_OF_DAY, hourOfDay)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+        }
+        
+        // If target time has passed this week, schedule for next Sunday
+        if (targetTime.before(currentTime)) {
+            targetTime.add(Calendar.WEEK_OF_YEAR, 1)
+        }
+        
+        val initialDelay = targetTime.timeInMillis - currentTime.timeInMillis
+        
+        val reminderRequest = PeriodicWorkRequestBuilder<DiaryReminderWorker>(
+            7, TimeUnit.DAYS
+        )
+            .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiresBatteryNotLow(true)
+                    .build()
+            )
+            .build()
+        
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            DIARY_REMINDER_WORK_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            reminderRequest
+        )
+        
+        // Still schedule mood analysis
+        scheduleMoodAnalysis(context)
+    }
+    
+    /**
+     * Schedule monthly diary reminder (1st day of month at 8 PM)
+     */
+    fun scheduleMonthlyReminder(context: Context, hourOfDay: Int = 20) {
+        val currentTime = Calendar.getInstance()
+        val targetTime = Calendar.getInstance().apply {
+            set(Calendar.DAY_OF_MONTH, 1)
+            set(Calendar.HOUR_OF_DAY, hourOfDay)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+        }
+        
+        // If target time has passed this month, schedule for next month
+        if (targetTime.before(currentTime)) {
+            targetTime.add(Calendar.MONTH, 1)
+        }
+        
+        val initialDelay = targetTime.timeInMillis - currentTime.timeInMillis
+        
+        val reminderRequest = PeriodicWorkRequestBuilder<DiaryReminderWorker>(
+            30, TimeUnit.DAYS
+        )
+            .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiresBatteryNotLow(true)
+                    .build()
+            )
+            .build()
+        
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            DIARY_REMINDER_WORK_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            reminderRequest
+        )
+        
+        // Still schedule mood analysis
+        scheduleMoodAnalysis(context)
+    }
 }
-
+ 

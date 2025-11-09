@@ -298,11 +298,12 @@
                 app:cardElevation="6dp">
 
                 <LinearLayout
+                    android:id="@+id/streak_card"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@drawable/streak_gradient"
                     android:orientation="vertical"
-                    android:padding="16dp"
-                    android:background="@drawable/streak_gradient">
+                    android:padding="16dp">
 
                     <TextView
                         android:id="@+id/tvStreak"
