@@ -22,7 +22,7 @@ class DeflateApplication : Application() {
         NotificationHelper.createNotificationChannels(this)
 
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
-        val notificationsEnabled = prefs.getBoolean("notifications_enabled", true) 
+        val notificationsEnabled = prefs.getBoolean("notifications_enabled", true)
         if (notificationsEnabled) {
 
             val frequency = prefs.getString("reminder_frequency", "daily") ?: "daily"

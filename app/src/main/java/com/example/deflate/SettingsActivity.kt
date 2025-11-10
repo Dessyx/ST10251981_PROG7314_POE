@@ -153,7 +153,7 @@ class SettingsActivity : BaseActivity() {
                     syncNameToFirebase(newName, user.uid)
                 }
 
-                // Update password (requires internet)
+                // Update password (requires internet and reauthentication)
                 if (newPass.isNotEmpty()) {
                     // Check if online
                     val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
@@ -163,13 +163,8 @@ class SettingsActivity : BaseActivity() {
                                    capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED)
                     
                     if (isOnline) {
-                        user.updatePassword(newPass).addOnCompleteListener { passTask ->
-                            if (passTask.isSuccessful) {
-                                Toast.makeText(this, getString(R.string.password_updated_success), Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(this, getString(R.string.password_update_failed, passTask.exception?.message ?: "" ), Toast.LENGTH_LONG).show()
-                            }
-                        }
+                        // Password change requires recent authentication - prompt for current password
+                        promptForReauthenticationAndUpdatePassword(newPass)
                     } else {
                         Toast.makeText(this, getString(R.string.password_update_requires_internet), Toast.LENGTH_LONG).show()
                     }
@@ -374,27 +369,119 @@ class SettingsActivity : BaseActivity() {
         syncPendingNameUpdate()
     }
     
-    private fun performAccountDeletion() {
-        val user = auth.currentUser
-        if (user != null) {
-            user.delete().addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val prefs = getSharedPreferences(PREFS_FILE, MODE_PRIVATE)
-                    prefs.edit().clear().apply()
-                    val homePrefs = getSharedPreferences("home_prefs", MODE_PRIVATE)
-                    homePrefs.edit().clear().apply()
+    private fun promptForReauthenticationAndUpdatePassword(newPassword: String) {
+        val user = auth.currentUser ?: return
+        val userEmail = user.email
+        
+        if (userEmail == null) {
+            Toast.makeText(this, "Unable to verify account", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
 
-                    Toast.makeText(this, getString(R.string.account_deleted_success), Toast.LENGTH_LONG).show()
-                    val intent = Intent(this, MainActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    startActivity(intent)
-                    finish()
-                } else {
-                    val errorMessage = task.exception?.message ?: "Unknown error"
-                    Toast.makeText(this, getString(R.string.account_delete_failed, errorMessage), Toast.LENGTH_LONG).show()
+        val currentPasswordInput = EditText(this).apply {
+            hint = "Enter current password"
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+            setPadding(50, 30, 50, 30)
+            setTextColor(android.graphics.Color.BLACK)
+            setHintTextColor(android.graphics.Color.DKGRAY)
+        }
+        
+        androidx.appcompat.app.AlertDialog.Builder(this, android.R.style.Theme_Material_Light_Dialog_Alert)
+            .setTitle("Verify Identity")
+            .setMessage("To change your password, please enter your current password:")
+            .setView(currentPasswordInput)
+            .setPositiveButton("Verify") { _, _ ->
+                val currentPassword = currentPasswordInput.text.toString().trim()
+                
+                if (currentPassword.isEmpty()) {
+                    Toast.makeText(this, "Current password cannot be empty", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                
+                // Reauthenticate user
+                val credential = EmailAuthProvider.getCredential(userEmail, currentPassword)
+                user.reauthenticate(credential).addOnCompleteListener { reauthTask ->
+                    if (reauthTask.isSuccessful) {
+
+                        user.updatePassword(newPassword).addOnCompleteListener { passTask ->
+                            if (passTask.isSuccessful) {
+                                Toast.makeText(this, getString(R.string.password_updated_success), Toast.LENGTH_SHORT).show()
+
+                                findViewById<EditText>(R.id.etPassword).setText("")
+                            } else {
+                                Toast.makeText(this, getString(R.string.password_update_failed, passTask.exception?.message ?: ""), Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    } else {
+                        Toast.makeText(this, "Authentication failed: ${reauthTask.exception?.message ?: "Incorrect password"}", Toast.LENGTH_LONG).show()
+                    }
                 }
             }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+    
+    private fun performAccountDeletion() {
+        val user = auth.currentUser ?: return
+        val userEmail = user.email
+        
+        if (userEmail == null) {
+            Toast.makeText(this, "Unable to verify account", Toast.LENGTH_SHORT).show()
+            return
         }
+        
+        
+   
+        val currentPasswordInput = EditText(this).apply {
+            hint = "Enter current password"
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+            setPadding(50, 30, 50, 30)
+            setTextColor(android.graphics.Color.BLACK)
+            setHintTextColor(android.graphics.Color.DKGRAY)
+        }
+        
+        androidx.appcompat.app.AlertDialog.Builder(this, android.R.style.Theme_Material_Light_Dialog_Alert)
+            .setTitle("Verify Identity")
+            .setMessage("To delete your account, please enter your current password:")
+            .setView(currentPasswordInput)
+            .setPositiveButton("Verify & Delete") { _, _ ->
+                val currentPassword = currentPasswordInput.text.toString().trim()
+                
+                if (currentPassword.isEmpty()) {
+                    Toast.makeText(this, "Current password cannot be empty", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                
+
+                val credential = EmailAuthProvider.getCredential(userEmail, currentPassword)
+                user.reauthenticate(credential).addOnCompleteListener { reauthTask ->
+                    if (reauthTask.isSuccessful) {
+
+                        user.delete().addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                val prefs = getSharedPreferences(PREFS_FILE, MODE_PRIVATE)
+                                prefs.edit().clear().apply()
+                                val homePrefs = getSharedPreferences("home_prefs", MODE_PRIVATE)
+                                homePrefs.edit().clear().apply()
+
+                                Toast.makeText(this, getString(R.string.account_deleted_success), Toast.LENGTH_LONG).show()
+                                val intent = Intent(this, MainActivity::class.java)
+                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                startActivity(intent)
+                                finish()
+                            } else {
+                                val errorMessage = task.exception?.message ?: "Unknown error"
+                                Toast.makeText(this, getString(R.string.account_delete_failed, errorMessage), Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    } else {
+                        Toast.makeText(this, "Authentication failed: ${reauthTask.exception?.message ?: "Incorrect password"}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
     
     private fun setReminderFrequency(frequency: String, animate: Boolean = true) {
