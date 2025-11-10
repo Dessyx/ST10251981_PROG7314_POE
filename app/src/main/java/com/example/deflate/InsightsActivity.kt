@@ -768,23 +768,13 @@ class InsightsActivity : BaseActivity() {
     // Load mood data for bar chart
     private fun loadMoodDataForChart(userId: String) {
         val dateRange = getDateRange()
-        val moodCounts = mutableMapOf<String, Int>()
-
         val moodOrder = listOf("Happy", "Excited", "Content", "Anxious", "Tired", "Sad")
-        val localizedMoodMap = mutableMapOf<String, Int>()
-        moodOrder.forEach { code ->
-            val display = when (code) {
-                "Happy" -> getString(R.string.mood_happy_label)
-                "Excited" -> getString(R.string.mood_excited_label)
-                "Content" -> getString(R.string.mood_content_label)
-                "Anxious" -> getString(R.string.mood_anxious_label)
-                "Tired" -> getString(R.string.mood_tired_label)
-                "Sad" -> getString(R.string.mood_sad_label)
-                else -> code
-            }
-            localizedMoodMap[display] = moodCounts[code] ?: 0
+        
+ 
+        val moodCounts = mutableMapOf<String, Int>()
+        moodOrder.forEach { mood ->
+            moodCounts[mood] = 0
         }
-        moodBarChart.updateMoodData(localizedMoodMap)
         
         // Load from local database (offline support)
         CoroutineScope(Dispatchers.Main).launch {
@@ -810,10 +800,42 @@ class InsightsActivity : BaseActivity() {
                     }
                 }
                 
-                moodBarChart.updateMoodData(moodCounts)
+             
+                val localizedMoodMap = mutableMapOf<String, Int>()
+                moodOrder.forEach { code ->
+                    val display = when (code) {
+                        "Happy" -> getString(R.string.mood_happy_label)
+                        "Excited" -> getString(R.string.mood_excited_label)
+                        "Content" -> getString(R.string.mood_content_label)
+                        "Anxious" -> getString(R.string.mood_anxious_label)
+                        "Tired" -> getString(R.string.mood_tired_label)
+                        "Sad" -> getString(R.string.mood_sad_label)
+                        else -> code
+                    }
+                    localizedMoodMap[display] = moodCounts[code] ?: 0
+                }
+                
+           
+                moodBarChart.updateMoodData(localizedMoodMap)
+                
+                Log.d("InsightsActivity", "📊 Mood counts: $moodCounts")
+                Log.d("InsightsActivity", "📊 Localized mood map: $localizedMoodMap")
             } catch (e: Exception) {
                 Log.e("InsightsActivity", "Error loading mood data for chart", e)
-                moodBarChart.updateMoodData(moodCounts)
+            
+                val emptyMap = moodOrder.associate { code ->
+                    val display = when (code) {
+                        "Happy" -> getString(R.string.mood_happy_label)
+                        "Excited" -> getString(R.string.mood_excited_label)
+                        "Content" -> getString(R.string.mood_content_label)
+                        "Anxious" -> getString(R.string.mood_anxious_label)
+                        "Tired" -> getString(R.string.mood_tired_label)
+                        "Sad" -> getString(R.string.mood_sad_label)
+                        else -> code
+                    }
+                    display to 0
+                }
+                moodBarChart.updateMoodData(emptyMap)
             }
         }
     }

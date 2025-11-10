@@ -18,12 +18,20 @@ class MoodBarChartView @JvmOverloads constructor(
     private val moodOrder = listOf("Happy", "Excited", "Content", "Anxious", "Tired", "Sad")
     
     private val moodColors = mapOf(
+        // English mood names
         "Happy" to Color.parseColor("#FFFBD5"),      
         "Excited" to Color.parseColor("#FBDEE0"),    
         "Content" to Color.parseColor("#FFE1D7"),    
         "Anxious" to Color.parseColor("#F8E1FD"),    
         "Tired" to Color.parseColor("#DFFAD4"),      
-        "Sad" to Color.parseColor("#D3F5FF")      
+        "Sad" to Color.parseColor("#D3F5FF"),
+        // Afrikaans mood names
+        "Bly" to Color.parseColor("#FFFBD5"),      
+        "Opgewonde" to Color.parseColor("#FBDEE0"),    
+        "Tevrede" to Color.parseColor("#FFE1D7"),    
+        "Angstig" to Color.parseColor("#F8E1FD"),    
+        "Moeg" to Color.parseColor("#DFFAD4"),      
+        "Hartseer" to Color.parseColor("#D3F5FF")      
     )
     
     private var moodData = mutableMapOf<String, Int>()
@@ -89,7 +97,8 @@ class MoodBarChartView @JvmOverloads constructor(
         var xOffset = margin + barSpacing / 2
 
          val maxGridValue = maxValue.coerceAtLeast(5)
-         moodOrder.forEach { mood ->
+       
+         moodData.keys.forEach { mood ->
              val count = moodData[mood] ?: 0
              val barHeight = (count.toFloat() / maxGridValue) * chartHeight
              paint.color = moodColors[mood] ?: Color.GRAY
