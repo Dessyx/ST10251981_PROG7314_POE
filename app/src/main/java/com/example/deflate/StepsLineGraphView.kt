@@ -286,10 +286,12 @@ class StepsLineGraphView @JvmOverloads constructor(
         
         val width = width.toFloat()
         val height = height.toFloat()
-        
-        canvas.drawText("No Steps Data", width / 2, height / 2, paint)
+        val noStepsText = context.getString(R.string.no_steps_data)
+        val logStepsText = context.getString(R.string.log_your_steps)
+
+        canvas.drawText(noStepsText, width / 2, height / 2, paint)
         
         paint.textSize = 28f
-        canvas.drawText("Log your steps in Activities", width / 2, height / 2 + 50, paint)
+        canvas.drawText(logStepsText, width / 2, height / 2 + 50, paint)
     }
 }

@@ -23,6 +23,8 @@ import java.util.Calendar
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import com.example.deflate.RetrofitClient
+import com.example.deflate.FavQsApi
 import com.google.firebase.firestore.FirebaseFirestore
 import android.util.Log
 import com.example.deflate.repository.MoodRepository
@@ -30,6 +32,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
 
 //-------------------------------------------------------------------------
 // Home screen activity
@@ -244,63 +247,91 @@ class HomeActivity : BaseActivity() {
                 val cachedQuote = withContext(Dispatchers.IO) {
                     db.quoteDao().getLatestQuote(tag)
                 }
-                
-                if (cachedQuote != null) {
-                    val quoteText = "\"${cachedQuote.body}\" \n- ${cachedQuote.author}"
-                    findViewById<TextView>(R.id.tvQuote).text = quoteText
-                }
-            } catch (e: Exception) {
-                Log.e("HomeActivity", "Error loading cached quote", e)
-            }
-        }
-        
-        // Then try to fetch from API (if online)
-        val call = RetrofitClient.instance.getQuotes(mood = tag)
 
-        call.enqueue(object : Callback<QuoteResponse> {
-            override fun onResponse(
-                call: Call<QuoteResponse>,
-                response: Response<QuoteResponse>
-            ) {
-                if (response.isSuccessful) {
-                    val quotes = response.body()?.quotes
-                    if (!quotes.isNullOrEmpty()) {
-                        val firstQuote = quotes[0]
-                        val quoteText = "\"${firstQuote.body}\" \n- ${firstQuote.author}"
-                        findViewById<TextView>(R.id.tvQuote).text = quoteText
-                        
-                        // Cache the quote for offline use
-                        CoroutineScope(Dispatchers.IO).launch {
-                            try {
-                                val db = com.example.deflate.database.AppDatabase.getDatabase(this@HomeActivity)
-                                val quoteEntity = com.example.deflate.database.QuoteEntity(
-                                    tag = tag,
-                                    body = firstQuote.body,
-                                    author = firstQuote.author,
-                                    timestamp = System.currentTimeMillis()
-                                )
-                                db.quoteDao().insertQuote(quoteEntity)
-                                
-                                // Clean up old quotes (older than 30 days)
-                                val cutoffTime = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000)
-                                db.quoteDao().deleteOldQuotes(cutoffTime)
-                            } catch (e: Exception) {
-                                Log.e("HomeActivity", "Error caching quote", e)
-                            }
+                if (cachedQuote != null) {
+                    // If device locale is Afrikaans, translate the body only before display
+                    val currentLang = Locale.getDefault().language
+                    val displayedBody = if (currentLang == "af") {
+                        // translate body to Afrikaans using TranslateUtils (suspend)
+                        try {
+                            TranslateUtils.translateIfNeeded(this@HomeActivity, cachedQuote.body, "af")
+                        } catch (e: Exception) {
+                            cachedQuote.body
                         }
                     } else {
+                        cachedQuote.body
+                    }
+
+                    val quoteText = "\"$displayedBody\" \n- ${cachedQuote.author}"
+                    findViewById<TextView>(R.id.tvQuote).text = quoteText
+                    // we can still try to fetch fresh ones from API
+                }
+
+
+                val api = RetrofitClient.instance
+                val call = api.getQuotes(mood = tag)
+                call.enqueue(object : Callback<QuoteResponse> {
+                    override fun onResponse(call: Call<QuoteResponse>, response: Response<QuoteResponse>) {
+                        if (response.isSuccessful) {
+                            val quotes = response.body()?.quotes
+                            if (!quotes.isNullOrEmpty()) {
+                                val firstQuote = quotes[0]
+
+                                // Translate only the body if device locale is Afrikaans
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    val currentLang = Locale.getDefault().language
+                                    val displayedBody = if (currentLang == "af") {
+                                        try {
+                                            TranslateUtils.translateIfNeeded(this@HomeActivity, firstQuote.body, "af")
+                                        } catch (e: Exception) {
+                                            firstQuote.body
+                                        }
+                                    } else {
+                                        firstQuote.body
+                                    }
+
+                                    val quoteText = "\"$displayedBody\" \n- ${firstQuote.author}"
+                                    findViewById<TextView>(R.id.tvQuote).text = quoteText
+
+                                    // Cache English body/author for offline use (keep raw body to allow retranslation on display)
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        try {
+                                            val db2 = com.example.deflate.database.AppDatabase.getDatabase(this@HomeActivity)
+                                            val quoteEntity = com.example.deflate.database.QuoteEntity(
+                                                tag = tag,
+                                                body = firstQuote.body, // store original English body
+                                                author = firstQuote.author,
+                                                timestamp = System.currentTimeMillis()
+                                            )
+                                            db2.quoteDao().insertQuote(quoteEntity)
+
+                                            // Clean up old quotes (older than 30 days)
+                                            val cutoffTime = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000)
+                                            db2.quoteDao().deleteOldQuotes(cutoffTime)
+                                        } catch (e: Exception) {
+                                            Log.e("HomeActivity", "Error caching quote", e)
+                                        }
+                                    }
+                                }
+                            } else {
+                                findViewById<TextView>(R.id.tvQuote).text = getString(R.string.no_quotes_found)
+                            }
+                        } else {
+                            // show nothing special — rely on cached quote if present
+                        }
+                    }
+
+                    override fun onFailure(call: Call<QuoteResponse>, t: Throwable) {
+                        // API failed — if cached quote existed it is already shown; try next tag fallback
                         tryNextTag()
                     }
-                } else {
-                    tryNextTag()
-                }
-            }
+                })
 
-            override fun onFailure(call: Call<QuoteResponse>, t: Throwable) {
-                // If API fails, try next tag (cached quote already shown if available)
-                tryNextTag()
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "Error fetching quote", e)
+                // keep whatever quote is currently shown
             }
-        })
+        }
     }
 
     // Iterate through tags and try fallback tags when needed
@@ -419,7 +450,7 @@ class HomeActivity : BaseActivity() {
                 tvStreakMessage?.text = getString(R.string.streak_start_prompt)
             }
             daysLeft > 0 -> {
-                tvStreakMessage?.text = "Log $daysLeft more days to complete this week! (Mood selection or diary entry)"
+                tvStreakMessage?.text = getString(R.string.streak_days_to_complete, daysLeft)
             }
             else -> {
                 tvStreakMessage?.text = getString(R.string.streak_complete, maxStreak)

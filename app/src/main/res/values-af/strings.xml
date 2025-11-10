@@ -103,7 +103,7 @@
     <string name="logout_confirmation">Is jy seker jy wil uitmeld?</string>
     <string name="logged_out">Suksesvol afgemeld</string>
     <string name="diary_entry">Diary Entry</string>
-    <string name="settings">Dagboekinskrywing</string>
+    <string name="settings">Instellings</string>
     <string name="notifications">Kennisgewings</string>
     <string name="biometrics">Biometrie</string>
     <string name="reminder_frequency">Herinnering frekwensie</string>
@@ -283,15 +283,27 @@
 
         <string name="unlock_with_biometrics_title">Ontsluit met biometrie</string>
         <string name="unlock_with_biometrics_subtitle">Gebruik jou vingerafdruk of gesig om toegang tot die app te kry</string>
-
-
         <string name="biometric_auth_successful">Biometriese verifikasie suksesvol</string>
         <string name="no_internet_first_time_biometrics">Geen internetverbinding. Eerste keer biometriese verifikasie vereis internet.</string>
         <string name="sign_in_first_to_enable_biometrics">Teken asseblief eers in met e-pos/wagwoord om biometrie te aktiveer.</string>
-
-
-
-
+    <string name="new_user">Wat wil jy hê jou nuwe naam of wagwoord moet wees?</string>
+    <string name="count_label">Aantal</string>
+    <string name="donut_label_mood">Gemoed</string>
+    <string name="donut_label_weight">Gewig</string>
+    <string name="donut_label_activities">Aktiwiteite</string>
+    <string name="no_steps_data">Geen stappedata</string>
+    <string name="log_your_steps">Teken jou stappe by Aktiwiteite aan</string>
+    <string name="toast_mood_selected">Bui gekies: %1$s</string>
+    <string name="toast_entry_saved">Inskrywing gestoor!</string>
+    <string name="toast_entry_saved_offline">Inskrywing plaaslik gestoor. Sal sinchroniseer wanneer aanlyn.</string>
+    <string name="toast_no_entry_for_day">Geen inskrywing vir hierdie dag nie</string>
+    <string name="toast_sign_in_to_save">Teken asseblief in om \'n inskrywing te stoor.</string>
+    <string name="toast_select_mood">Kies asseblief \'n bui.</string>
+    <string name="toast_write_feeling">Skryf asseblief hoe jy voel.</string>
+    <string name="toast_diary_entry_preview">%1$s: %2$s</string>
+    <string name="no_mood_data">Geen bui-data beskikbaar nie</string>
+    <string name="streak_days_to_complete">Teken nog %1$d dag(e) om hierdie week te voltooi! (Gemoed-keuse of dagboekinskrywing)</string>
+    <string name="diary_title">Dagboek Titel</string>
 </resources>
 
 

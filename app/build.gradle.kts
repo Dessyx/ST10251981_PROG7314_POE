@@ -75,6 +75,8 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.biometric.ktx)
+    implementation(libs.common)
+    // implementation(libs.translate)
 
     // Testing dependencies
     testImplementation(libs.junit)
@@ -147,6 +149,7 @@ dependencies {
     // WorkManager for notification scheduling
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
+    implementation ("com.google.mlkit:translate:17.0.3")
 
 
 }

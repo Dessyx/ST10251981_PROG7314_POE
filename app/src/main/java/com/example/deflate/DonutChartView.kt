@@ -120,7 +120,8 @@ class DonutChartView @JvmOverloads constructor(
         if (moodCount > 0) {
             val sweepAngle = (moodCount.toFloat() / total) * 360f
             val labelAngle = currentAngle + (sweepAngle / 2f)
-            drawLabelAtAngle(canvas, centerX, centerY, labelRadius, labelAngle, "Mood", moodColor)
+            val moodLabel = context.getString(R.string.donut_label_mood)
+            drawLabelAtAngle(canvas, centerX, centerY, labelRadius, labelAngle, moodLabel, moodColor)
             currentAngle += sweepAngle
         }
         
@@ -128,7 +129,8 @@ class DonutChartView @JvmOverloads constructor(
         if (weightCount > 0) {
             val sweepAngle = (weightCount.toFloat() / total) * 360f
             val labelAngle = currentAngle + (sweepAngle / 2f)
-            drawLabelAtAngle(canvas, centerX, centerY, labelRadius, labelAngle, "Weight", weightColor)
+            val weightLabel = context.getString(R.string.donut_label_weight)
+            drawLabelAtAngle(canvas, centerX, centerY, labelRadius, labelAngle, weightLabel, weightColor)
             currentAngle += sweepAngle
         }
         
@@ -136,7 +138,8 @@ class DonutChartView @JvmOverloads constructor(
         if (activitiesCount > 0) {
             val sweepAngle = (activitiesCount.toFloat() / total) * 360f
             val labelAngle = currentAngle + (sweepAngle / 2f)
-            drawLabelAtAngle(canvas, centerX, centerY, labelRadius, labelAngle, "Activities", activitiesColor)
+            val activitiesLabel = context.getString(R.string.donut_label_activities)
+            drawLabelAtAngle(canvas, centerX, centerY, labelRadius, labelAngle, activitiesLabel, activitiesColor)
         }
     }
     

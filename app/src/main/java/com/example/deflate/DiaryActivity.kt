@@ -115,7 +115,16 @@ class DiaryActivity : BaseActivity() {
     // Select mood
     private fun setMood(mood: String) {
         selectedMood = mood
-        Toast.makeText(this, "Mood selected: $mood", Toast.LENGTH_SHORT).show()
+        val localizedMood = when (mood) {
+            "Happy" -> getString(R.string.mood_happy_label)
+            "Excited" -> getString(R.string.mood_excited_label)
+            "Content" -> getString(R.string.mood_content_label)
+            "Anxious" -> getString(R.string.mood_anxious_label)
+            "Tired" -> getString(R.string.mood_tired_label)
+            "Sad" -> getString(R.string.mood_sad_label)
+            else -> mood
+        }
+        Toast.makeText(this, getString(R.string.toast_mood_selected, localizedMood), Toast.LENGTH_SHORT).show()
 
     }
 
@@ -124,7 +133,7 @@ class DiaryActivity : BaseActivity() {
     private fun saveDiaryEntry() {
         val user = auth.currentUser
         if (user == null) {
-            Toast.makeText(this, "Please sign in to save an entry.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.toast_sign_in_to_save), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -132,11 +141,11 @@ class DiaryActivity : BaseActivity() {
         val mood = selectedMood
 
         if (mood == null) {
-            Toast.makeText(this, "Please select a mood.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.toast_select_mood), Toast.LENGTH_SHORT).show()
             return
         }
         if (text.isEmpty()) {
-            Toast.makeText(this, "Please write about how you're feeling.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.toast_write_feeling), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -158,7 +167,7 @@ class DiaryActivity : BaseActivity() {
         CoroutineScope(Dispatchers.Main).launch {
             val result = diaryRepository.saveEntry(entry)
             result.onSuccess {
-                Toast.makeText(this@DiaryActivity, "Entry saved!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@DiaryActivity, getString(R.string.toast_entry_saved), Toast.LENGTH_SHORT).show()
                 etEntry.text?.clear()
                 selectedMood = null
                 btnSave.isEnabled = true
@@ -166,7 +175,7 @@ class DiaryActivity : BaseActivity() {
                
                 handlePostSaveNotifications(user.uid)
             }.onFailure { e ->
-                Toast.makeText(this@DiaryActivity, "Entry saved locally. Will sync when online.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@DiaryActivity, getString(R.string.toast_entry_saved_offline), Toast.LENGTH_SHORT).show()
                 etEntry.text?.clear()
                 selectedMood = null
                 btnSave.isEnabled = true

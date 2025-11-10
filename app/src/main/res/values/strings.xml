@@ -284,7 +284,23 @@
     <string name="biometric_auth_successful">Biometric authentication successful</string>
     <string name="no_internet_first_time_biometrics">No internet connection. First-time biometric authentication requires internet.</string>
     <string name="sign_in_first_to_enable_biometrics">Please sign in with email/password first to enable biometric authentication.</string>
-
-
+    <string name="new_user">What would you like your new name or password to be?</string>
+    <string name="count_label">Count</string>
+    <string name="donut_label_mood">Mood</string>
+    <string name="donut_label_weight">Weight</string>
+    <string name="donut_label_activities">Activities</string>
+    <string name="no_steps_data">No Steps Data</string>
+    <string name="log_your_steps">Log your steps in Activities</string>
+    <string name="toast_mood_selected">Mood selected: %1$s</string>
+    <string name="toast_entry_saved">Entry saved!</string>
+    <string name="toast_entry_saved_offline">Entry saved locally. Will sync when online.</string>
+    <string name="toast_no_entry_for_day">No entry for this day</string>
+    <string name="toast_sign_in_to_save">Please sign in to save an entry.</string>
+    <string name="toast_select_mood">Please select a mood.</string>
+    <string name="toast_write_feeling">Please write about how you\'re feeling.</string>
+    <string name="toast_diary_entry_preview">%1$s: %2$s</string>
+    <string name="no_mood_data">No mood data available</string>
+    <string name="streak_days_to_complete">Log %1$d more day(s) to complete this week! (Mood selection or diary entry)</string>
+    <string name="diary_title">Diary Title</string>
 </resources>
 

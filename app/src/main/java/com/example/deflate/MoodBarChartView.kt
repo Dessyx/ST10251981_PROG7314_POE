@@ -77,7 +77,8 @@ class MoodBarChartView @JvmOverloads constructor(
         textPaint.textSize = 28f
         canvas.save()
         canvas.rotate(-90f, margin / 4, height / 2)
-        canvas.drawText("Count", margin / 4, height / 2, textPaint)
+        val countLabel = context.getString(R.string.count_label)
+        canvas.drawText(countLabel, margin / 4, height / 2, textPaint)
         canvas.restore()
         
 
@@ -148,10 +149,10 @@ class MoodBarChartView @JvmOverloads constructor(
     
     private fun drawEmptyState(canvas: Canvas) {
         canvas.drawColor(Color.WHITE)
-        
+        val noMoodText = context.getString(R.string.no_mood_data)
         textPaint.textSize = 40f
         textPaint.textAlign = Paint.Align.CENTER
         textPaint.color = Color.GRAY
-        canvas.drawText("No mood data available", width / 2f, height / 2f, textPaint)
+        canvas.drawText(noMoodText, width / 2f, height / 2f, textPaint)
     }
 }

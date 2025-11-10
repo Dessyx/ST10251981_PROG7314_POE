@@ -770,11 +770,21 @@ class InsightsActivity : BaseActivity() {
         val dateRange = getDateRange()
         val moodCounts = mutableMapOf<String, Int>()
 
-        // Initialize all mood types with 0 for all filters (day, week, month)
-        val moodTypes = listOf("Happy", "Excited", "Content", "Anxious", "Tired", "Sad")
-        moodTypes.forEach { mood ->
-            moodCounts[mood] = 0
+        val moodOrder = listOf("Happy", "Excited", "Content", "Anxious", "Tired", "Sad")
+        val localizedMoodMap = mutableMapOf<String, Int>()
+        moodOrder.forEach { code ->
+            val display = when (code) {
+                "Happy" -> getString(R.string.mood_happy_label)
+                "Excited" -> getString(R.string.mood_excited_label)
+                "Content" -> getString(R.string.mood_content_label)
+                "Anxious" -> getString(R.string.mood_anxious_label)
+                "Tired" -> getString(R.string.mood_tired_label)
+                "Sad" -> getString(R.string.mood_sad_label)
+                else -> code
+            }
+            localizedMoodMap[display] = moodCounts[code] ?: 0
         }
+        moodBarChart.updateMoodData(localizedMoodMap)
         
         // Load from local database (offline support)
         CoroutineScope(Dispatchers.Main).launch {
