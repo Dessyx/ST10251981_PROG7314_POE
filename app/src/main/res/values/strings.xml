@@ -302,5 +302,7 @@
     <string name="no_mood_data">No mood data available</string>
     <string name="streak_days_to_complete">Log %1$d more day(s) to complete this week! (Mood selection or diary entry)</string>
     <string name="diary_title">Diary Title</string>
+    <string name="mood_chill_label">Chill</string>
+
 </resources>
 

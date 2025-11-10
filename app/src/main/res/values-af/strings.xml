@@ -150,6 +150,7 @@
     <string name="mood_excited_label">Opgewonde</string>
     <string name="mood_content_label">Tevrede</string>
     <string name="mood_unknown_label">Gemoed</string>
+    <string name="mood_chill_label">Ontspan</string>
     <string name="name_saved_locally">Naam plaaslik gestoor. Sal sinchroniseer wanneer aanlyn.</string>
 
     <string name="password_updated_success">Wagwoord opgedateer!</string>

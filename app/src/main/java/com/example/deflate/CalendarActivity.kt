@@ -120,7 +120,7 @@ class CalendarActivity : BaseActivity() {
             "Sad" to R.drawable.mood_sad,
         )
 
-        moodMap.forEach { (mood, colorRes) ->
+        moodMap.forEach { (moodCode, colorRes) ->
             val itemLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = android.view.Gravity.CENTER
@@ -132,15 +132,24 @@ class CalendarActivity : BaseActivity() {
                 backgroundTintList = ContextCompat.getColorStateList(context, colorRes)
                 strokeWidth = 3
                 strokeColor = ContextCompat.getColorStateList(context, android.R.color.black)
-                icon = ContextCompat.getDrawable(context, moodIcons[mood] ?: 0)
+                icon = ContextCompat.getDrawable(context, moodIcons[moodCode] ?: 0)
                 iconTint = null
                 iconGravity = com.google.android.material.button.MaterialButton.ICON_GRAVITY_TEXT_START
                 iconPadding = 0
                 text = ""
             }
+            val localizedMoodLabel = when (moodCode) {
+                "Happy" -> getString(R.string.mood_happy_label)
+                "Chill" -> getString(R.string.mood_chill_label)
+                "Excited" -> getString(R.string.mood_excited_label)
+                "Anxious" -> getString(R.string.mood_anxious_label)
+                "Tired" -> getString(R.string.mood_tired_label)
+                "Sad" -> getString(R.string.mood_sad_label)
+                else -> moodCode
+            }
 
             val moodLabel = TextView(this).apply {
-                text = mood
+                text = localizedMoodLabel
                 textSize = 12f
                 gravity = android.view.Gravity.CENTER
             }
