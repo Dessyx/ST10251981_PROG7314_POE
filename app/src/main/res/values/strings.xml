@@ -1,27 +1,308 @@
 <resources>
-    <string name="app_name">Deflate</string>
-    <!-- Web client ID from google-services.json -->
-    <string name="default_web_client_id">592716643926-lo7n1jogvbkdbr0ud8slj5eq4bca998q.apps.googleusercontent.com</string>
-    <!-- TODO: Replace with your Facebook App ID -->
-    <string name="facebook_app_id">794482809744386</string>
-    <!-- TODO: Replace with your Facebook Client Token -->
-    <string name="facebook_client_token">4f1227f5dce3a4f97ae706a60efbdbc0</string>
-    <!-- Facebook Login Protocol Scheme -->
-    <string name="fb_login_protocol_scheme">fb794482809744386</string>
-    
-    <!-- Activities Activity Strings -->
-    <string name="input_cleared">Inputs cleared</string>
+    <string name="back">Back</string>
+    <string name="activities">Activities</string>
+    <string name="weight_label">Weight</string>
+    <string name="weight_hint">Enter your weight in kg</string>
+    <string name="track_wellness">Track your wellness.</string>
+    <string name="steps_label">Steps Today</string>
+    <string name="steps_hint">Enter your steps achieved</string>
+    <string name="keep_active">Keep moving and stay active!</string>
+    <string name="reset">Reset</string>
+    <string name="save_activities">Save Activities</string>
+    <string name="current_activities">Current Activities</string>
+    <string name="weight_display">Weight</string>
+    <string name="steps_display">Steps</string>
+    <string name="calendar_title">Calendar</string>
+    <string name="mood_code_header">Mood Code</string>
+    <string name="dear_diary_title">Dear Diary</string>
+    <string name="write_about_feeling">Write about how you are feeling:</string>
+    <string name="note">Note</string>
+    <string name="choose_mood_today">Choose a mood for today:</string>
+    <string name="save">Save</string>
+    <string name="view_history">View History</string>
+    <string name="github_authentication">GitHub Authentication</string>
+    <string name="close">Close</string>
+    <string name="history_screen">History</string>
+    <string name="today_date">Tuesday, September 11</string>
+    <string name="how_feeling_today">How are you feeling today?</string>
+    <string name="deflate_diary">+ Deflate in Diary</string>
+    <string name="todays_mood">Today\'s mood</string>
+    <string name="steps_count">7500 steps</string>
+    <string name="daily_inspiration">Daily Inspiration</string>
+    <string name="inspo_quote">“The only way to do great work is to love what you do.” - Steve Jobs</string>
+    <string name="streak_count">🔥 5-day streak</string>
+    <string name="streak_message">Keep it going!</string>
+    <string name="streak_days_left">2 more days to reach 7-day streak!</string>
+    <string name="insights_title">Insights</string>
+    <string name="mood_entries">Mood Entries</string>
+    <string name="mood_entries_icon">Mood entries icon</string>
+    <string name="streak">Streak</string>
+    <string name="streak_icon">Streak icon</string>
+    <string name="diary_entries">Diary Entries</string>
+    <string name="diary_entries_icon">Diary entries icon</string>
+    <string name="filter">Filter</string>
+    <string name="filter_description">Filter your mood by day, week or month</string>
+    <string name="app_title">DEFLATE</string>
+    <string name="sign_in">Sign In</string>
+    <string name="username">Username</string>
+    <string name="enter_username">Enter your username</string>
+    <string name="password">Password</string>
+    <string name="enter_password">Enter your password</string>
+    <string name="login">Login</string>
+    <string name="or_login_with">Or login with</string>
+    <string name="use_biometrics">Use biometrics</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="name">Name</string>
+    <string name="enter_name">Enter your name</string>
+    <string name="surname">Surname</string>
+    <string name="enter_surname">Enter your surname</string>
+    <string name="register">Register</string>
+    <string name="already_registered">Already registered?</string>
+    <string name="click_to_login">Click here to Login</string>
+    <string name="select_date_range">Select Date Range</string>
+    <string name="from">From:</string>
+    <string name="to">To:</string>
+    <string name="select_start_date">Select start date</string>
+    <string name="select_end_date">Select end date</string>
+    <string name="cancel">Cancel</string>
+    <string name="apply">Apply</string>
+    <string name="filter_title">Filter</string>
+    <string name="filter_day">Day</string>
+    <string name="filter_week">Week</string>
+    <string name="filter_month">Month</string>
+    <string name="filter_custom">Custom</string>
+    <string name="streak_icon_desc">Diary streak icon</string>
+    <string name="streak_title">Diary entry streak for the month</string>
+    <string name="streak_days">9 days</string>
+    <string name="Deflate">Deflate</string>
+    <string name="facebook_app_id">YOUR_FACEBOOK_APP_ID_HERE</string>
+    <string name="facebook_client_token">YOUR_FACEBOOK_CLIENT_TOKEN_HERE</string>
+    <string name="language_label">Language</string>
+    <string name="biometric_on">Biometric On</string>
+    <string name="biometric_off">Biometric Off</string>
+    <string name="input_cleared">Input cleared</string>
     <string name="please_enter_weight_or_steps">Please enter weight or steps</string>
     <string name="please_sign_in_to_save_activities">Please sign in to save activities</string>
-    <string name="please_enter_valid_weight">Please enter a valid weight</string>
-    <string name="please_enter_valid_steps">Please enter a valid number of steps</string>
-    <string name="activities_saved_successfully">Activities saved successfully!</string>
-    <string name="failed_to_save_activities">Failed to save activities: %s</string>
+    <string name="please_enter_valid_weight">Please enter valid weight</string>
+    <string name="please_enter_valid_steps">Please enter valid steps</string>
+    <string name="steps_format">Steps: %1$d</string>
+    <string name="activities_saved_successfully">Activities saved successfully</string>
+
+    <string name="weight_default">0</string>
+    <string name="steps_default">0</string>
     <string name="please_sign_in_to_view_activities">Please sign in to view activities</string>
     <string name="error_loading_weight_data">Error loading weight data</string>
     <string name="error_loading_steps_data">Error loading steps data</string>
-    <string name="weight_format">%d kgs</string>
-    <string name="steps_format">%d steps</string>
-    <string name="weight_default">0 kgs</string>
-    <string name="steps_default">0 steps</string>
+    <string name="lets_begin">Let\s Begin!</string>
+    <string name="weight_format">%.1f kg</string>
+    <string name="failed_to_save_activities">Failed to save activities</string>
+    <string name="language_changed">Language changed</string>
+    <string name="logout">Logout</string>
+    <string name="logout_confirmation">Are you sure you want to logout?</string>
+    <string name="logged_out">Logged out successfully</string>
+    <string name="diary_entry">Diary Entry</string>
+    <string name="settings">Settings</string>
+    <string name="notifications">Notifications</string>
+    <string name="biometrics">Biometrics</string>
+    <string name="reminder_frequency">Reminder frequency</string>
+    <string name="edit">Edit</string>
+    <string name="welcome_user">Welcome, %1$s</string>
+    <string name="mood_selected_toast">Mood: %1$s selected!</string>
+    <string name="no_quotes_found">No quotes found. Please try another mood!</string>
+    <string name="streak_format">🔥 %1$d/%2$d days this week</string>
+    <string name="streak_start_prompt">Start your week by logging your mood or writing in your diary!</string>
+    <string name="streak_complete">Amazing! You\ve logged all %1$d days this week! 🎉</string>
+    <string name="mood_saved_success">Mood saved!</string>
+    <string name="mood_saved_offline">Mood saved locally. Will sync when online.</string>
+    <string name="date_format_long">EEEE, MMMM dd</string>
+    <string name="today_category">Today\'s Entry Categories</string>
+    <string name="mood_text">Mood</string>
+    <string name="steps_week">Steps for the week</string>
+    <string name="total_steps">Total Steps:</string>
+    <string name="week">Week</string>
+    <string name="year">Year</string>
+    <string name="month">Month</string>
+    <string name="weight_text">Weight</string>
+    <string name="daily">Daily</string>
+    <string name="weekly">Weekly</string>
+    <string name="monthly">Monthly</string>
+    <string name="filter_history">Filter History</string>
+    <string name="please_sign_in_to_view_insights">Please sign in to view insights</string>
+    <string name="zero_value">0</string>
+    <string name="diary_entry_streak_title">Diary entry streak</string>
+    <string name="week_of_number">Week %1$d</string>
+    <string name="steps_for_week">Steps for the week</string>
+    <string name="steps_for_month">Steps for the month</string>
+    <string name="steps_for_year">Steps for the year</string>
+    <string name="entry_categories_today">Today\'s Entry Categories</string>
+    <string name="entry_categories_week">This Week\'s Entry Categories</string>
+    <string name="entry_categories_month">This Month\'s Entry Categories</string>
+    <string name="entry_categories_custom">Custom Date Range Entry Categories</string>
+    <string name="no_data_available">No data available</string>
+    <string name="delete_account">Delete Account</string>
+    <string name="diary_ntry">Diary Entry</string>
+    <string name="mood_happy_label">Happy</string>
+    <string name="mood_sad_label">Sad</string>
+    <string name="mood_anxious_label">Anxious</string>
+    <string name="mood_tired_label">Tired</string>
+    <string name="mood_excited_label">Excited</string>
+    <string name="mood_content_label">Content</string>
+    <string name="mood_unknown_label">Mood</string>
+    <string name="name_saved_locally">Name saved locally. Will sync when online.</string>
+
+    <string name="password_updated_success">Password updated!</string>
+    <string name="password_update_failed">Failed to update password: %1$s</string>
+    <string name="password_update_requires_internet">Password update requires an internet connection.</string>
+
+    <string name="delete_account_title">Delete Account</string>
+    <string name="delete_account_warning">⚠️ WARNING: This will permanently delete your account and ALL your data (diary entries, moods, activities, etc.). This action CANNOT be undone!\n\nAre you absolutely sure?</string>
+    <string name="delete_account_confirm_yes_delete">Yes, Delete Everything</string>
+    <string name="final_confirmation_title">Final Confirmation</string>
+    <string name="final_confirmation_message">This is your last chance! Deleting your account is PERMANENT. Continue?</string>
+    <string name="delete_account_button">DELETE ACCOUNT</string>
+    <string name="Cancel_l">Cancel</string>
+
+    <string name="notifications_enabled">Notifications enabled</string>
+    <string name="notifications_disabled">Notifications disabled</string>
+
+    <string name="biometrics_not_available">Biometrics not available on this device</string>
+    <string name="biometrics_enabled_message">Biometrics enabled. Close and reopen the app for activation.</string>
+    <string name="biometrics_disabled_message">Biometrics disabled.</string>
+
+    <string name="reminders_daily_enabled">Daily reminders enabled</string>
+    <string name="reminders_weekly_enabled">Weekly reminders enabled (Sunday 8 PM)</string>
+    <string name="reminders_monthly_enabled">Monthly reminders enabled (1st of the month 8 PM)</string>
+
+    <string name="account_deleted_success">Account permanently deleted</string>
+    <string name="account_delete_failed">Failed to delete account: %1$s\n\nYou may need to re-authenticate first.</string>
+
+    <string name="user_default">User</string>
+    <string name="channel_diary_title">Diary Reminders</string>
+    <string name="channel_diary_description">Daily reminders to log your feelings</string>
+
+    <string name="channel_streak_title">Streak Updates</string>
+    <string name="channel_streak_description">Notifications about your progress and milestones</string>
+
+    <string name="channel_crisis_title">Crisis Support</string>
+    <string name="channel_crisis_description">Important support and helpline information</string>
+
+    <!-- Diary reminder notification -->
+    <string name="diary_notif_title">Time to Check In</string>
+    <string name="diary_notif_text">How are you feeling today? Take a moment to write about your feelings.</string>
+
+    <!-- Crisis notification -->
+    <string name="crisis_title">Support is Available</string>
+    <string name="crisis_text">We\'ve noticed you\'ve been feeling down. Help is here for you.</string>
+    <string name="crisis_message_detail">We\'ve noticed you\'ve been feeling down lately. You\'re not alone, and help is available.\n\nCrisis Helplines:\n🇺🇸 National Suicide Prevention Lifeline: 988\n🇬🇧 Samaritans: 116 123\n🇿🇦 SADAG: 0800 567 567\n🌍 International: findahelpline.com\n\nPlease reach out if you need support.</string>
+
+    <!-- Streak messages for specific milestones -->
+    <string name="streak_title_1">Great Start! 🌱</string>
+    <string name="streak_msg_1">You\'ve started your journey! Keep logging your feelings daily to build your streak.</string>
+
+    <string name="streak_title_3">3 Day Streak! 🔥</string>
+    <string name="streak_msg_3">Amazing! You\'re building a healthy habit. Three days of consistent self-reflection!</string>
+
+    <string name="streak_title_7">Week Streak! 🎉</string>
+    <string name="streak_msg_7">Congratulations! You\'ve been checking in with yourself for a whole week. That\'s dedication!</string>
+
+    <string name="streak_title_14">2 Week Streak! ⭐</string>
+    <string name="streak_msg_14">Incredible! Two weeks of consistent self-care. You\'re doing great!</string>
+
+    <string name="streak_title_30">30 Day Milestone! 🏆</string>
+    <string name="streak_msg_30">Outstanding achievement! A full month of reflection and growth. You should be proud!</string>
+
+    <string name="streak_title_60">60 Day Milestone! 💎</string>
+    <string name="streak_msg_60">Two months of dedication! You\'ve made self-reflection a true habit.</string>
+
+    <string name="streak_title_90">90 Day Milestone! 👑</string>
+    <string name="streak_msg_90">Three months strong! You\'re a self-care champion. Keep up the amazing work!</string>
+
+    <string name="streak_title_365">1 YEAR STREAK! 🎊</string>
+    <string name="streak_msg_365">LEGENDARY! One full year of daily reflection. You\'re an inspiration!</string>
+
+    <!-- Format for multiples of 10 (e.g., 10, 20, 30...) -->
+    <string name="streak_title_multiple_of_10">%1$d Day Streak! 🔥</string>
+    <string name="streak_msg_multiple_of_10">You\'re on fire! %1$d days of consistent self-care. Keep it going!</string>
+
+    <!-- Default/title for any other count -->
+    <string name="streak_title_default">%1$d Day Streak! ✨</string>
+    <string name="streak_msg_default">Keep up the great work! You\'re building a powerful habit.</string>
+    <string name="please_sign_in_to_continue">Please sign in to continue</string>
+    <string name="auth_requires_internet">Authentication requires internet connection. If you\'re already logged in, the app will work offline. Please connect to the internet to sign in or create an account.</string>
+    <string name="signing_in">Signing in...</string>
+
+
+    <string name="no_email_linked_to_username">No email linked to this username</string>
+    <string name="username_not_found">Username not found</string>
+    <string name="generic_error_with_detail">Error: %1$s</string>
+
+    <string name="network_error_check_connection">Network error. Please check your internet connection.</string>
+    <string name="internal_error_try_again">Internal error. Please try again later.</string>
+    <string name="invalid_email_address">Invalid email address.</string>
+    <string name="incorrect_password">Incorrect password.</string>
+    <string name="user_not_found">User not found.</string>
+    <string name="account_disabled">This account has been disabled.</string>
+    <string name="too_many_attempts">Too many failed attempts. Please try again later.</string>
+    <string name="login_failed_with_code">Login failed: %1$s</string>
+
+    <string name="unknown_error">Unknown error</string>
+    <string name="no_internet_connection_try_again">No internet connection. Please check your network and try again.</string>
+    <string name="login_failed_with_detail">Login failed: %1$s</string>
+
+    <string name="username_required">Username is required</string>
+    <string name="password_required">Password is required</string>
+
+    <string name="sign_in_successful">Sign in successful!</string>
+
+    <string name="default_web_client_id">DEFAULT_WEB_CLIENT_ID</string>
+    <string name="dev_error_check_sha">DEVELOPER_ERROR: Check SHA-1 fingerprint and OAuth configuration</string>
+    <string name="user_cancelled">Sign-in was cancelled</string>
+    <string name="google_signin_failed_with_code">Google Sign-In failed: %1$d - %2$s</string>
+
+    <string name="auth_failed_try_again">Authentication failed. Please try again.</string>
+
+
+    <string name="github_auth_failed">GitHub authentication failed</string>
+    <string name="github_auth_cancelled">GitHub authentication cancelled</string>
+    <string name="github_client_id_not_configured">GitHub Client ID not configured.</string>
+    <string name="authenticating_with_github">Authenticating with GitHub...</string>
+    <string name="github_auth_failed_with_detail">GitHub authentication failed: %1$s</string>
+    <string name="github_user_display_name">GitHub User</string>
+    <string name="github_auth_successful">Welcome! GitHub authentication successful</string>
+
+    <string name="enable_biometrics_title">Enable biometrics in Settings</string>
+    <string name="enable_biometrics_message">To use biometric sign in, first sign in with your account, then open Settings and enable Biometrics (toggle). After enabling, close and re-open the app for the feature to activate.</string>
+    <string name="ok">OK</string>
+
+    <string name="authentication_error_with_detail">Authentication error: %1$s</string>
+    <string name="authentication_failed">Authentication failed</string>
+
+    <string name="unlock_with_biometrics_title">Unlock with biometrics</string>
+    <string name="unlock_with_biometrics_subtitle">Use your fingerprint or face to access the app</string>
+
+
+    <string name="biometric_auth_successful">Biometric authentication successful</string>
+    <string name="no_internet_first_time_biometrics">No internet connection. First-time biometric authentication requires internet.</string>
+    <string name="sign_in_first_to_enable_biometrics">Please sign in with email/password first to enable biometric authentication.</string>
+    <string name="new_user">What would you like your new name or password to be?</string>
+    <string name="count_label">Count</string>
+    <string name="donut_label_mood">Mood</string>
+    <string name="donut_label_weight">Weight</string>
+    <string name="donut_label_activities">Activities</string>
+    <string name="no_steps_data">No Steps Data</string>
+    <string name="log_your_steps">Log your steps in Activities</string>
+    <string name="toast_mood_selected">Mood selected: %1$s</string>
+    <string name="toast_entry_saved">Entry saved!</string>
+    <string name="toast_entry_saved_offline">Entry saved locally. Will sync when online.</string>
+    <string name="toast_no_entry_for_day">No entry for this day</string>
+    <string name="toast_sign_in_to_save">Please sign in to save an entry.</string>
+    <string name="toast_select_mood">Please select a mood.</string>
+    <string name="toast_write_feeling">Please write about how you\'re feeling.</string>
+    <string name="toast_diary_entry_preview">%1$s: %2$s</string>
+    <string name="no_mood_data">No mood data available</string>
+    <string name="streak_days_to_complete">Log %1$d more day(s) to complete this week! (Mood selection or diary entry)</string>
+    <string name="diary_title">Diary Title</string>
+    <string name="mood_chill_label">Chill</string>
+
 </resources>
+

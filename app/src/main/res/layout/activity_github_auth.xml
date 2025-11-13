@@ -19,7 +19,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="GitHub Authentication"
+            android:text="@string/github_authentication"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@color/black"
@@ -32,7 +32,7 @@
             android:src="@drawable/ic_arrow_back"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:padding="4dp"
-            android:contentDescription="Close" />
+            android:contentDescription="@string/close" />
 
     </LinearLayout>
 

@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("com.google.gms.google-services")
+    kotlin("kapt")
 }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -73,17 +74,21 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
-    
+    implementation(libs.androidx.biometric.ktx)
+    implementation(libs.common)
+    // implementation(libs.translate)
+
     // Testing dependencies
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.robolectric)
     testImplementation(libs.kotlinx.coroutines.test)
-    
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
+    // Firebase
     implementation(platform("com.google.firebase:firebase-bom:34.2.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
@@ -101,4 +106,52 @@ dependencies {
     // These 2 lines were guided by AI (ChatGPT, 2025)
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    // Biometrics
+    implementation("androidx.biometric:biometric:1.2.0")
+    implementation(libs.androidx.biometric.ktx.v140alpha02)
+    implementation("androidx.security:security-crypto:1.1.0")
+
+    // Gson
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    //  MaterialCalendarView (correct fork)
+    implementation("com.github.mhiew:material-calendarview:2.0.1")
+
+    // ThreeTenABP for LocalDate and time API
+    implementation("com.jakewharton.threetenabp:threetenabp:1.4.4")
+
+    // Kotlin standard library
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.0")
+
+    // AndroidX Core and AppCompat
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+
+    // Material Components
+    implementation("com.google.android.material:material:1.11.0")
+    
+    // RecyclerView
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+    
+    // Room Database
+    val roomVersion = "2.6.1"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    kapt("androidx.room:room-compiler:$roomVersion")
+    
+    // Coroutines for async operations
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    
+    // Lifecycle components for ViewModel
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    
+    // WorkManager for notification scheduling
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+    implementation ("com.google.mlkit:translate:17.0.3")
+
+
 }

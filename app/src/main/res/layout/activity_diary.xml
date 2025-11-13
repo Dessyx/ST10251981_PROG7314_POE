@@ -9,8 +9,6 @@
     android:background="@color/white"
     tools:ignore="RtlHardcoded">
 
-
-
     <!-- Back button -->
     <ImageView
         android:id="@+id/btnBack"
@@ -18,7 +16,7 @@
         android:layout_height="28dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="12dp"
-        android:contentDescription="back"
+        android:contentDescription="@string/back"
         android:src="@drawable/ic_arrow_back"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -60,14 +58,13 @@
                         android:scaleType="fitXY"
                         android:src="@drawable/diary_header" />
 
-
                     <TextView
                         android:id="@+id/tvTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:fontFamily="@font/roboto"
-                        android:text="Dear Diary"
+                        android:text="@string/dear_diary_title"
                         android:textAlignment="center"
                         android:textColor="@color/dear_diary"
                         android:textSize="48sp"
@@ -86,7 +83,7 @@
                 android:fontFamily="@font/roboto"
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="8dp"
-                android:text="Write about how you are feeling:"
+                android:text="@string/write_about_feeling"
                 android:textColor="@color/black"
                 android:textSize="15sp"
                 android:textStyle="bold" />
@@ -102,7 +99,7 @@
                     android:id="@+id/imgNote"
                     android:layout_width="42dp"
                     android:layout_height="48dp"
-                    android:contentDescription="note"
+                    android:contentDescription="@string/note"
                     android:src="@drawable/ic_note" />
 
                 <EditText
@@ -133,7 +130,7 @@
                 android:fontFamily="@font/roboto"
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="8dp"
-                android:text="Choose a mood for today:"
+                android:text="@string/choose_mood_today"
                 android:textAlignment="center"
                 android:textColor="@color/black"
                 android:textSize="15sp"
@@ -153,7 +150,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@color/white"
-                    android:backgroundTint="@color/white"
                     android:orientation="vertical"
                     android:padding="14dp">
 
@@ -179,7 +175,6 @@
                             android:layout_width="65dp"
                             android:layout_height="65dp"
                             android:layout_marginEnd="12dp"
-                            android:text=""
                             app:backgroundTint="@color/blue"
                             app:cornerRadius="40dp"
                             app:icon="@drawable/mood_sad"
@@ -189,7 +184,6 @@
                             android:id="@+id/btnMoodAnxious"
                             android:layout_width="65dp"
                             android:layout_height="65dp"
-                            android:text=""
                             app:backgroundTint="@color/purple"
                             app:cornerRadius="40dp"
                             app:icon="@drawable/mood_anxious"
@@ -217,7 +211,6 @@
                             android:layout_width="65dp"
                             android:layout_height="65dp"
                             android:layout_marginEnd="12dp"
-                            android:text=""
                             app:backgroundTint="@color/red"
                             app:cornerRadius="40dp"
                             app:icon="@drawable/mood_excited"
@@ -227,11 +220,9 @@
                             android:id="@+id/btnMoodContent"
                             android:layout_width="65dp"
                             android:layout_height="65dp"
-                            android:text=""
                             app:backgroundTint="@color/orange"
                             app:cornerRadius="40dp"
                             app:icon="@drawable/mood_content"
-                            app:iconPadding="0dp"
                             app:iconTint="@android:color/black"
                             tools:ignore="SpeakableTextPresentCheck" />
                     </LinearLayout>
@@ -239,7 +230,6 @@
             </androidx.cardview.widget.CardView>
 
             <!-- Save button -->
-
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSave"
                 android:layout_width="220dp"
@@ -247,13 +237,12 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="18dp"
                 android:fontFamily="@font/roboto"
-                android:text="Save"
+                android:text="@string/save"
                 android:textColor="@color/black"
                 android:textSize="22sp"
                 android:textStyle="bold"
                 app:backgroundTint="@color/save"
                 app:cornerRadius="20dp" />
-
 
             <!-- View History -->
             <com.google.android.material.button.MaterialButton
@@ -264,13 +253,12 @@
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="24dp"
                 android:fontFamily="@font/roboto"
-                android:text="View History"
+                android:text="@string/view_history"
                 android:textColor="@color/black"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 app:backgroundTint="@color/history"
                 app:cornerRadius="26dp" />
-
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
@@ -286,5 +274,3 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
-
-

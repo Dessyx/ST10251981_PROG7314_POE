@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
@@ -8,16 +9,20 @@
     android:background="@drawable/welcomeimg"
     tools:context=".MainActivity">
 
+    <!-- App Title -->
+
+    <!-- Let's Begin Button -->
+
     <TextView
         android:id="@+id/title_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="70dp"
+        android:layout_marginTop="380dp"
         android:shadowColor="@color/black"
         android:shadowDx="2"
         android:shadowDy="2"
         android:shadowRadius="4"
-        android:text="DEFLATE"
+        android:text="@string/app_title"
         android:textColor="@color/white"
         android:textSize="48sp"
         android:textStyle="bold"
@@ -31,18 +36,19 @@
         android:id="@+id/lets_begin_button"
         android:layout_width="200dp"
         android:layout_height="48dp"
-        android:layout_marginTop="80dp"
+        android:layout_marginTop="100dp"
         android:background="@drawable/button_background"
         android:clickable="true"
         android:focusable="true"
         android:gravity="center"
-        android:text="Let's Begin!"
+        android:text="@string/lets_begin"
         android:textColor="@color/black"
         android:textSize="18sp"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.492"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/title_text"
-        app:layout_constraintVertical_chainStyle="packed" />
+        app:layout_constraintTop_toBottomOf="@id/title_text" />
+
+    <!-- Login Link -->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

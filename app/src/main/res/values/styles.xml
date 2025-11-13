@@ -1,0 +1,16 @@
+<resources>
+    <style name="Widget.BiometricSwitch.Text" parent="TextAppearance.AppCompat.Small">
+        <item name="android:textSize">10sp</item>
+        <item name="android:fontFamily">@font/roboto_medium</item>
+        <item name="android:letterSpacing">0.02</item>
+        <item name="android:textColor">@color/biometric_text</item>
+    </style>
+    
+    <style name="WhiteDialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:windowBackground">@color/white</item>
+        <item name="android:colorBackground">@color/white</item>
+        <item name="android:textColorPrimary">@color/black</item>
+        <item name="android:textColorSecondary">@color/black</item>
+        <item name="android:listDivider">@color/light_gray</item>
+    </style>
+</resources>

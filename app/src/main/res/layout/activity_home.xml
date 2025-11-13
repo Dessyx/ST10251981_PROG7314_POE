@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -6,7 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white">
-
 
     <androidx.core.widget.NestedScrollView
         android:id="@+id/home_scroll"
@@ -16,7 +14,6 @@
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:clipToPadding="false"
         android:paddingBottom="80dp">
-
 
         <LinearLayout
             android:id="@+id/home_layout"
@@ -31,7 +28,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
                 android:layout_marginTop="30dp"
-                android:text="Welcome, User"
+                android:text="@string/welcome_user"
                 android:textColor="@color/black"
                 android:textSize="22sp"
                 android:textStyle="bold" />
@@ -41,7 +38,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
-                android:text="Tuesday, September 11"
+                android:text="@string/today_date"
                 android:textColor="@color/black"
                 android:textSize="14sp" />
 
@@ -65,7 +62,7 @@
                         android:id="@+id/moodTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="How are you feeling today?"
+                        android:text="@string/how_feeling_today"
                         android:textColor="@color/black"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -84,7 +81,7 @@
                         android:minHeight="0dp"
                         android:paddingStart="12dp"
                         android:paddingEnd="12dp"
-                        android:text="+ Deflate in Diary"
+                        android:text="@string/deflate_diary"
                         android:textColor="@android:color/black"
                         android:textSize="8sp"
                         app:cornerRadius="20dp"
@@ -106,7 +103,6 @@
                         android:rowCount="2"
                         android:rowOrderPreserved="false"
                         android:useDefaultMargins="true">
-
                         <!-- Happy -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnMoodHappy"
@@ -130,7 +126,6 @@
                             app:cornerRadius="40dp"
                             app:icon="@drawable/mood_sad"
                             app:iconTint="@android:color/black" />
-
                         <!-- Anxious -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnMoodAnxious"
@@ -154,7 +149,6 @@
                             app:cornerRadius="40dp"
                             app:icon="@drawable/mood_tired"
                             app:iconTint="@android:color/black" />
-
                         <!-- Excited -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnMoodExcited"
@@ -180,11 +174,12 @@
                             app:iconTint="@android:color/black" />
                     </GridLayout>
 
+
+
                 </RelativeLayout>
             </androidx.cardview.widget.CardView>
 
-
-            <!-- Card 2: Today’s Mood + Activities -->
+            <!-- Card 2: Today's Mood + Activities -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardStats"
                 android:layout_width="match_parent"
@@ -211,7 +206,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Today's mood"
+                            android:text="@string/todays_mood"
                             android:textColor="@color/black"
                             android:textStyle="bold" />
 
@@ -234,7 +229,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Activities"
+                            android:text="@string/activities"
                             android:textColor="@color/black"
                             android:textStyle="bold" />
 
@@ -252,7 +247,7 @@
                             android:id="@+id/tvStepsHome"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="7500 steps"
+                            android:text="@string/steps_count"
                             android:textColor="@color/black" />
                     </LinearLayout>
                 </LinearLayout>
@@ -277,7 +272,7 @@
                         android:id="@+id/DailyInspo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Daily Inspiration"
+                        android:text="@string/daily_inspiration"
                         android:textColor="@color/black"
                         android:textStyle="bold" />
 
@@ -287,7 +282,7 @@
                         android:layout_height="wrap_content"
                         android:layout_below="@id/DailyInspo"
                         android:layout_marginTop="10dp"
-                        android:text="“The only way to do great work is to love what you do.”&#10;- Steve Jobs"
+                        android:text="@string/inspo_quote"
                         android:textColor="@color/black" />
 
                 </RelativeLayout>
@@ -303,16 +298,18 @@
                 app:cardElevation="6dp">
 
                 <LinearLayout
+                    android:id="@+id/streak_card"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@drawable/streak_gradient"
                     android:orientation="vertical"
-                    android:padding="16dp"
-                    android:background="@drawable/streak_gradient">
+                    android:padding="16dp">
 
                     <TextView
+                        android:id="@+id/tvStreak"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🔥 5-day streak"
+                        android:text="@string/streak_count"
                         android:textColor="@color/black"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -320,7 +317,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Keep it going!"
+                        android:text="@string/streak_message"
                         android:textColor="@color/black"
                         android:textSize="14sp" />
 
@@ -335,10 +332,11 @@
                         android:progressTint="@color/pink" />
 
                     <TextView
+                        android:id="@+id/tvStreakMessage"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
-                        android:text="2 more days to reach 7-day streak!"
+                        android:text="@string/streak_days_left"
                         android:textColor="@color/black"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -357,5 +355,3 @@
         app:menu="@menu/bottom_nav_menu"
         app:layout_behavior="@string/hide_bottom_view_on_scroll_behavior" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
-
-

@@ -14,12 +14,13 @@ import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.*
 
 //-------------------------------------------------------------------------
 // Sign Up screen activity
-class SignUpActivity : AppCompatActivity() {
+class SignUpActivity : BaseActivity() {
 
     companion object {
         private const val TAG = "SignUpActivity"
@@ -94,10 +95,24 @@ class SignUpActivity : AppCompatActivity() {
 
         if (!validateInputs(name, surname, username, password)) return
 
+        // Check network connectivity
+        if (!isNetworkAvailable()) {
+            Toast.makeText(this, "Account creation requires internet connection. Please connect to the internet and try again.", Toast.LENGTH_LONG).show()
+            return
+        }
+
         registerButton.isEnabled = false
         registerButton.text = "Registering..."
 
         registerUserWithFirebase(name, surname, username, password)
+    }
+    
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager = getSystemService(android.content.Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+               capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
 
     // Input validation
@@ -204,15 +219,27 @@ class SignUpActivity : AppCompatActivity() {
             "isActive" to true
         )
 
-        firestore.collection("users")
-            .document(uid)
-            .set(userData)
-            .addOnSuccessListener {
-                handleRegistrationSuccess(name, surname)
-            }
-            .addOnFailureListener { exception ->
-                handleRegistrationError("User created but failed to save data: ${exception.message}")
-            }
+
+        val user = auth.currentUser
+        val profileUpdates = UserProfileChangeRequest.Builder()
+            .setDisplayName(name)
+            .build()
+        
+        user?.updateProfile(profileUpdates)?.addOnCompleteListener { profileTask ->
+
+            firestore.collection("users")
+                .document(uid)
+                .set(userData)
+                .addOnSuccessListener {
+                    // Save name to SharedPreferences for offline access
+                    val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+                    prefs.edit().putString("pending_name_update", name).apply()
+                    handleRegistrationSuccess(name, surname)
+                }
+                .addOnFailureListener { exception ->
+                    handleRegistrationError("User created but failed to save data: ${exception.message}")
+                }
+        }
     }
 
     // Success handler

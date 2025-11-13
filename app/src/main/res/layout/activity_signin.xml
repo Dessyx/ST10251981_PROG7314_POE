@@ -6,8 +6,6 @@
     android:layout_height="match_parent"
     android:background="@drawable/signup_bg">
 
-
-
     <!-- White card container -->
     <LinearLayout
         android:id="@+id/signin_card"
@@ -22,15 +20,15 @@
         android:orientation="vertical"
         android:padding="40dp">
 
-        <!-- Header with back button and title -->
-
+        <!-- Back Button -->
         <ImageView
             android:id="@+id/btnBack"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:contentDescription="Back"
+            android:contentDescription="@string/back"
             android:src="@drawable/ic_arrow_back" />
 
+        <!-- Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -46,7 +44,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Sign In"
+                android:text="@string/sign_in"
                 android:textColor="@color/black"
                 android:textSize="24sp"
                 android:textStyle="bold" />
@@ -62,7 +60,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="5dp"
-            android:text="Username"
+            android:text="@string/username"
             android:textColor="@color/black"
             android:textSize="16sp" />
 
@@ -73,7 +71,7 @@
             android:layout_marginBottom="24dp"
             android:background="@drawable/edittext_background"
             android:gravity="center_vertical"
-            android:hint="Enter your username"
+            android:hint="@string/enter_username"
             android:textColor="@color/black"
             android:textColorHint="#80000000"
             android:textSize="16sp" />
@@ -83,7 +81,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="5dp"
-            android:text="Password"
+            android:text="@string/password"
             android:textColor="@color/black"
             android:textSize="16sp" />
 
@@ -94,7 +92,7 @@
             android:layout_marginBottom="24dp"
             android:background="@drawable/edittext_background"
             android:gravity="center_vertical"
-            android:hint="Enter your password"
+            android:hint="@string/enter_password"
             android:inputType="textPassword"
             android:textColor="@color/black"
             android:textColorHint="#80000000"
@@ -111,11 +109,10 @@
             android:clickable="true"
             android:focusable="true"
             android:gravity="center"
-            android:text="Login"
+            android:text="@string/login"
             android:textColor="@color/black"
             android:textSize="18sp"
             android:textStyle="bold" />
-
 
         <!-- Divider -->
         <TextView
@@ -123,10 +120,10 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:gravity="center"
-            android:text="Or login with"
+            android:text="@string/or_login_with"
             android:textSize="14sp" />
 
-        <!-- SSO buttons: Google, Apple, Microsoft -->
+        <!-- SSO Buttons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -161,18 +158,19 @@
                 app:iconTint="@null"
                 app:strokeWidth="0dp" />
 
-            <!-- Facebook Button -->
+            <!-- Biometric Button -->
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/facebook_signin_button"
+                android:id="@+id/biometric_signin_button"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:backgroundTint="@android:color/transparent"
-                app:icon="@drawable/facebook_icon"
                 app:iconGravity="start"
                 app:iconPadding="8dp"
                 app:iconTint="@null"
-                app:strokeWidth="0dp" />
+                app:strokeWidth="0dp"
+                android:text="@string/use_biometrics"
+                android:textAllCaps="false" />
 
         </LinearLayout>
 

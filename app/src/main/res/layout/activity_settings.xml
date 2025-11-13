@@ -31,7 +31,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Settings"
+                android:text="@string/settings"
                 android:textSize="22sp"
                 android:textStyle="bold"
                 android:textColor="@android:color/black"
@@ -62,69 +62,116 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Language"
+                android:text="@string/language_label"
                 android:textStyle="bold"
                 android:textColor="@android:color/black"
                 android:layout_marginTop="16dp" />
-
-            <ImageView
-                android:id="@+id/imgLanguage"
+            <com.example.deflate.LanguageToggleView
+                android:id="@+id/languageToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_lang"
-                android:contentDescription="Language Icon"
-                android:layout_marginTop="8dp" />
+                android:layout_marginTop="8dp"
+                android:layout_gravity="start" />
+
 
             <!-- Notifications -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Notifications"
+                android:text="@string/notifications"
                 android:textStyle="bold"
                 android:textColor="@android:color/black"
                 android:layout_marginTop="12dp" />
 
-            <ImageView
-                android:id="@+id/imgNotification"
+            <com.example.deflate.NotificationToggleView
+                android:id="@+id/notificationToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_switch"
-                android:contentDescription="Notification Icon"
-                android:layout_marginTop="8dp" />
+                android:layout_marginTop="8dp"
+                android:layout_gravity="start" />
 
             <!-- Biometrics -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Biometrics"
+                android:text="@string/biometrics"
                 android:textStyle="bold"
                 android:textColor="@android:color/black"
                 android:layout_marginTop="12dp" />
 
-            <ImageView
-                android:id="@+id/Biometrics"
+            <!-- in activity_settings.xml, where the biometrics switch belongs -->
+            <com.example.deflate.BiometricToggleView
+                android:id="@+id/biometricToggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/bio_switch"
-                android:contentDescription="Biometrics Icon"
-                android:layout_marginTop="8dp" />
+                android:layout_marginTop="8dp"
+                android:layout_gravity="start"/>
+
 
             <!-- Reminder Frequency -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Reminder frequency"
+                android:text="@string/reminder_frequency"
                 android:textStyle="bold"
                 android:textColor="@android:color/black"
                 android:layout_marginTop="12dp" />
 
-            <ImageView
-                android:id="@+id/imgReminder"
-                android:layout_width="wrap_content"
+            <androidx.cardview.widget.CardView
+                android:id="@+id/reminderFilterCard"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_rem"
-                android:contentDescription="Reminder Icon"
-                android:layout_marginTop="8dp" />
+                android:layout_marginTop="8dp"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/blue"
+                app:strokeWidth="1dp"
+                app:strokeColor="@android:color/black">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="4dp">
+
+                    <TextView
+                        android:id="@+id/btnReminderDaily"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:layout_margin="2dp"
+                        android:background="@drawable/selected_filter_bg"
+                        android:gravity="center"
+                        android:text="@string/daily"
+                        android:textColor="@color/black"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/btnReminderWeekly"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:layout_margin="2dp"
+                        android:background="@drawable/unselected_filter_bg"
+                        android:gravity="center"
+                        android:text="@string/weekly"
+                        android:textColor="@color/black"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/btnReminderMonthly"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:layout_margin="2dp"
+                        android:background="@drawable/unselected_filter_bg"
+                        android:gravity="center"
+                        android:text="@string/monthly"
+                        android:textColor="@color/black"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
             <!-- Edit Section -->
             <com.google.android.material.card.MaterialCardView
@@ -145,7 +192,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Edit"
+                        android:text="@string/edit"
                         android:textStyle="bold"
                         android:textSize="16sp"
                         android:textColor="@android:color/black"
@@ -155,7 +202,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="What would you like your new name or password to be?"
+                        android:text="@string/new_user"
                         android:textColor="@android:color/black"
                         android:layout_marginTop="4dp" />
 
@@ -163,7 +210,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Name:"
+                        android:text="@string/name"
                         android:textStyle="bold"
                         android:textColor="@android:color/black"
                         android:layout_marginTop="8dp" />
@@ -182,7 +229,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Password:"
+                        android:text="@string/password"
                         android:textStyle="bold"
                         android:textColor="@android:color/black"
                         android:layout_marginTop="12dp" />
@@ -202,19 +249,29 @@
                         android:id="@+id/btnSave"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Save"
+                        android:text="@string/save"
                         android:textColor="@android:color/black"
                         android:backgroundTint="#9AFF9A"
                         android:layout_marginTop="16dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Logout Button -->
+            <Button
+                android:id="@+id/btnLogout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/logout"
+                android:textColor="@android:color/black"
+                android:backgroundTint="#FFA500"
+                android:layout_marginTop="12dp" />
+
             <!-- Delete Account -->
             <Button
                 android:id="@+id/btnDeleteAccount"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Delete Account"
+                android:text="@string/delete_account"
                 android:textColor="@android:color/black"
                 android:backgroundTint="#FF7F7F"
                 android:layout_marginTop="12dp"

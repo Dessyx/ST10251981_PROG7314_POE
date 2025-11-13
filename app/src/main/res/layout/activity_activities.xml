@@ -15,7 +15,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:src="@drawable/ic_arrow_back"
-        android:contentDescription="Back"
+        android:contentDescription="@string/back"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -24,7 +24,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Activities"
+        android:text="@string/activities"
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="@color/black"
@@ -32,24 +32,37 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Weight Input Section -->
-
-    <!-- Steps Input Section -->
-    <LinearLayout
-        android:id="@+id/weightSection"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:layout_marginTop="200dp"
-        android:orientation="vertical"
+    <!-- Scrollable content -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
         app:layout_constraintTop_toBottomOf="@id/tvTitle"
-        tools:layout_editor_absoluteX="16dp">
+        app:layout_constraintBottom_toTopOf="@id/bottomNav"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="16dp">
+
+            <!-- Weight Input Section -->
+            <LinearLayout
+                android:id="@+id/weightSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="Weight"
+            android:text="@string/weight_label"
             android:textColor="@color/black"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -60,7 +73,7 @@
             android:layout_height="48dp"
             android:layout_marginTop="8dp"
             android:background="@drawable/edittext_background"
-            android:hint="Enter your weight in kg"
+            android:hint="@string/weight_hint"
             android:inputType="numberDecimal"
             android:textColor="@color/black"
             android:paddingStart="16dp"
@@ -70,23 +83,23 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="Track your wellness."
+            android:text="@string/track_wellness"
             android:textColor="@color/black"
             android:textSize="12sp" />
     </LinearLayout>
 
+    <!-- Steps Input Section -->
     <LinearLayout
         android:id="@+id/stepsSection"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:orientation="vertical"
-        app:layout_constraintTop_toBottomOf="@id/weightSection">
+        android:orientation="vertical">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Steps Today"
+            android:text="@string/steps_label"
             android:textColor="@color/black"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -98,7 +111,7 @@
             android:layout_height="48dp"
             android:layout_marginTop="8dp"
             android:background="@drawable/edittext_background"
-            android:hint="Enter your steps achieved"
+            android:hint="@string/steps_hint"
             android:inputType="number"
             android:textColor="@color/black"
             android:paddingStart="16dp"
@@ -108,7 +121,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="Keep moving and stay active!"
+            android:text="@string/keep_active"
             android:textColor="@color/black"
             android:textSize="12sp" />
     </LinearLayout>
@@ -119,8 +132,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:orientation="vertical"
-        app:layout_constraintTop_toBottomOf="@id/stepsSection">
+        android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -136,7 +148,7 @@
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:background="@drawable/btn_orange_rounded"
-                android:text="Reset"
+                android:text="@string/reset"
                 android:textColor="@color/black"
                 android:textSize="14sp"
                 app:backgroundTint="@color/blue"
@@ -149,7 +161,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_weight="1"
                 android:background="@drawable/btn_blue_rounded"
-                android:text="Save Activities"
+                android:text="@string/save_activities"
                 android:textColor="@color/black"
                 android:textSize="14sp"
                 app:backgroundTint="@color/orange"
@@ -163,13 +175,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:orientation="vertical"
-        app:layout_constraintTop_toBottomOf="@id/buttonSection">
+        android:orientation="vertical">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Current Activities"
+            android:text="@string/current_activities"
             android:textColor="@color/black"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -202,7 +213,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Weight"
+                        android:text="@string/weight_display"
                         android:textColor="@color/black"
                         android:textSize="20sp"
                         android:textStyle="bold" />
@@ -211,7 +222,7 @@
                         android:layout_width="55dp"
                         android:layout_height="54dp"
                         android:layout_marginTop="8dp"
-                        android:contentDescription="Weight"
+                        android:contentDescription="@string/weight_display"
                         android:src="@drawable/weightimage" />
 
                     <TextView
@@ -246,7 +257,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Steps"
+                        android:text="@string/steps_display"
                         android:textColor="@color/black"
                         android:textSize="20sp"
                         android:textStyle="bold" />
@@ -255,7 +266,7 @@
                         android:layout_width="53dp"
                         android:layout_height="58dp"
                         android:layout_marginTop="8dp"
-                        android:contentDescription="Steps"
+                        android:contentDescription="@string/steps_display"
                         android:src="@drawable/stepsimage" />
 
                     <TextView
@@ -271,17 +282,18 @@
         </LinearLayout>
     </LinearLayout>
 
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
     <!-- NavigationBar -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNav"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="#ECE4FF"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:menu="@menu/bottom_nav_menu"
-        tools:layout_editor_absoluteX="0dp" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:menu="@menu/bottom_nav_menu" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-
-
-
