@@ -155,6 +155,74 @@ The app selects inspirational quotes based on your current mood:
 
 ---
 ## Git Actions
+This repository includes an automated CI workflow designed to validate the application's core functionality using a curated suite of tests.  
+The workflow ensures build stability, prevents regressions, and provides detailed test reports for continuous improvement.
+
+
+### 🚀 Workflow Overview
+#### 🧪 Main Functionality Tests
+- **Timeout: 25 Minutes**: Ensures reliable execution within CI limits  
+- **Ubuntu Latest Runner**: Executes on a stable Linux environment  
+- **Core Functionality Validation**: Runs essential Android + Java unit and integration tests  
+
+
+### ⚙️ Build & Environment Setup
+#### 📁 Repository & Build Setup
+- **Repository Checkout**: Fetches the full project source code  
+- **Gradle Wrapper Validation**: Confirms secure and untampered Gradle wrapper  
+- **Java Setup (JDK 17)**: Configures Java environment with Gradle caching  
+- **Android SDK Installation**: Prepares the system for Android app compilation  
+- **SDK Components Installed**:  
+  - Platform Tools  
+  - Android API 34  
+  - Android Build Tools  
+
+
+### 🏗️ Application Build
+#### 🔧 Build Process
+- **Debug Variant Build**: Executes `./gradlew assembleDebug`  
+- **Build Verification**: Ensures all modules compile and dependencies resolve cleanly  
+
+
+### 🔍 Test Execution
+#### 🧩 Targeted Unit & Integration Tests
+
+##### 🔐 Authentication
+- `SignInActivityTest`  
+- `SignInValidationTest`
+
+##### 😊 Mood Tracking
+- `HomeActivityMoodTest`  
+- `MoodPersistenceTest`
+
+##### 🔗 Integration
+- `AppIntegrationTest`
+
+##### 🌐 API Client
+- `RetrofitClientTest`  
+- `FavQsApiTest`
+
+##### 🛠️ Utilities
+- `DateUtilsTest`
+
+##### 📦 Data Models
+- `QuoteResponseTest`  
+- `QuoteTest`
+
+
+
+### 📤 Test Reporting
+#### 📝 Reports & Artifacts
+- **Test Results Upload**: Preserves JUnit results, HTML reports, and logs  
+- **Always Executes**: Runs even when previous steps fail, ensuring full visibility  
+- **Artifact Storage**: Makes test reports downloadable from GitHub Actions  
+
+
+### ✅ Summary
+This workflow ensures that every build undergoes strict functional validation.  
+By combining robust test coverage with automated build verification, the CI pipeline plays a key role in maintaining code quality, stability, and developer confidence.
+
+---
 
 ## 📺 Youtube
 - link: https://www.youtube.com/watch?v=8cBRrMAoGz0 
