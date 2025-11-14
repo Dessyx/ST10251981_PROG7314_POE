@@ -238,7 +238,7 @@ class HomeActivity : BaseActivity() {
     }
 
     //-------------------------------------------------------------------------
-    // Fetch quotes by tag using Retrofit and update UI
+    // Fetch quotes by tag using Retrofit and update UI (ChatGPT, 2025)
     private fun fetchQuote(tag: String) {
         // First try to load from cache (offline support)
         CoroutineScope(Dispatchers.Main).launch {
