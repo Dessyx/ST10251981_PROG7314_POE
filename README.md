@@ -218,11 +218,7 @@ The workflow ensures build stability, prevents regressions, and provides detaile
 - **Artifact Storage**: Makes test reports downloadable from GitHub Actions  
 
 
-### ✅ Summary
-This workflow ensures that every build undergoes strict functional validation.  
-By combining robust test coverage with automated build verification, the CI pipeline plays a key role in maintaining code quality, stability, and developer confidence.
-
 ---
 
 ## 📺 Youtube
-- link: https://www.youtube.com/watch?v=8cBRrMAoGz0 
+- link: https://www.youtube.com/watch?v=2nZCEG7-dmo  
